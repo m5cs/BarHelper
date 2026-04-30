@@ -131,6 +131,8 @@
   /* ============ СПИННЕР ============ */
   .spinner-wrap {
     display: flex; justify-content: center; align-items: center;
+    flex-direction: column;
+    gap: 16px;
     padding: 60px 0;
   }
   .spinner {
@@ -141,6 +143,17 @@
     animation: spin 0.8s linear infinite;
   }
   @keyframes spin { to { transform: rotate(360deg); } }
+  .loading-text {
+    font-size: 14px;
+    color: var(--label-2);
+    text-align: center;
+    line-height: 1.4;
+    animation: pulse 1.5s ease-in-out infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 0.5; }
+    50% { opacity: 1; }
+  }
 
   /* ============ INSET LIST (iOS Settings style) ============ */
   .inset-group {
@@ -873,7 +886,10 @@
 
   <div id="saved-banner" class="saved-banner">✓ Замер сохранён</div>
 
-  <div id="inv-loading" class="spinner-wrap"><div class="spinner"></div></div>
+  <div id="inv-loading" class="spinner-wrap">
+    <div class="spinner"></div>
+    <div class="loading-text" id="inv-loading-text">Загружаю данные...</div>
+  </div>
 
   <div id="inv-content" style="display: none;">
     <div class="inv-bar" id="inv-bar">
@@ -999,7 +1015,10 @@
     <div class="legend-item"><span class="legend-dot" style="background: var(--label-3)"></span>Чужая</div>
   </div>
 
-  <div id="schedule-loading" class="spinner-wrap" style="display: none;"><div class="spinner"></div></div>
+  <div id="schedule-loading" class="spinner-wrap" style="display: none;">
+    <div class="spinner"></div>
+    <div class="loading-text">Загружаю график...</div>
+  </div>
 </div>
 
 <!-- ==================== TAB BAR ==================== -->
@@ -1091,6 +1110,19 @@ function api(action, params) {
     });
 }
 
+// =====================================================================
+// ПРОГРЕВ СЕРВЕРА
+// Apps Script "засыпает" если им долго не пользовались. Холодный старт
+// занимает 5-10 секунд. Чтобы юзер не ждал — отправляем "пустой" запрос
+// сразу при загрузке страницы, пока он ещё вводит PIN.
+// =====================================================================
+function warmupServer() {
+  // Лёгкий пинг — просто разбудить сервер. Игнорируем результат.
+  // Используем checkPin с заведомо неправильным PIN — это самый дешёвый запрос.
+  api('checkPin', { pin: '__warmup__' }).catch(() => {});
+}
+warmupServer();
+
 const state = {
   pinOk: false,
   selectedBartender: null,
@@ -1124,8 +1156,21 @@ function tryLogin() {
   pinError.textContent = '';
   pinSubmit.disabled = true;
   pinSubmit.textContent = 'Проверка...';
+
+  // Прогрессивное обновление текста при долгой загрузке
+  let stage = 0;
+  const stages = [
+    { delay: 2500, text: 'Сервер просыпается...' },
+    { delay: 6000, text: 'Ещё чуть-чуть...' },
+  ];
+  const timers = stages.map(s => setTimeout(() => {
+    pinSubmit.textContent = s.text;
+  }, s.delay));
+  const clearTimers = () => timers.forEach(clearTimeout);
+
   api('checkPin', { pin })
     .then((ok) => {
+      clearTimers();
       if (ok) { state.pinOk = true; showApp(); }
       else {
         pinError.textContent = 'Неверный PIN';
@@ -1136,6 +1181,7 @@ function tryLogin() {
       }
     })
     .catch((err) => {
+      clearTimers();
       pinError.textContent = 'Ошибка: ' + err.message;
       pinSubmit.disabled = false;
       pinSubmit.textContent = 'Войти';
@@ -1192,8 +1238,20 @@ function loadInitialData(onDone) {
   document.getElementById('inv-loading').style.display = 'flex';
   document.getElementById('inv-content').style.display = 'none';
 
+  // Прогрессивное обновление текста загрузки
+  const loadingText = document.getElementById('inv-loading-text');
+  if (loadingText) loadingText.textContent = 'Загружаю данные...';
+  const t1 = setTimeout(() => {
+    if (loadingText) loadingText.textContent = 'Подключаюсь к серверу...';
+  }, 2000);
+  const t2 = setTimeout(() => {
+    if (loadingText) loadingText.textContent = 'Сервер просыпается, ещё пару секунд...';
+  }, 5000);
+  const clearTimers = () => { clearTimeout(t1); clearTimeout(t2); };
+
   api('getInitialData')
     .then((data) => {
+      clearTimers();
       state.bottles = data.bottles || [];
       state.users = data.users || [];
       state.recipes = data.recipes || [];
@@ -1204,6 +1262,7 @@ function loadInitialData(onDone) {
       if (onDone) onDone();
     })
     .catch((err) => {
+      clearTimers();
       document.getElementById('inv-loading').innerHTML =
         '<div style="color: var(--red); text-align: center; padding: 20px;">Ошибка: ' + (err && err.message ? err.message : err) + '</div>';
       if (onDone) onDone();
