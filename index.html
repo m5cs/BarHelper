@@ -412,13 +412,11 @@
   /* ============ MODAL ============ */
   .modal-overlay {
     position: fixed; inset: 0;
-    background: rgba(0,0,0,0.5);
+    background: rgba(0,0,0,0.6);
     display: none;
     align-items: flex-end;
     justify-content: center;
     z-index: 2000;
-    backdrop-filter: blur(2px);
-    -webkit-backdrop-filter: blur(2px);
   }
   .modal-overlay.show { display: flex; }
   .modal {
@@ -856,9 +854,7 @@
   .tab-bar {
     position: fixed;
     bottom: 0; left: 0; right: 0;
-    background: rgba(28,28,30,0.92);
-    backdrop-filter: saturate(180%) blur(24px);
-    -webkit-backdrop-filter: saturate(180%) blur(24px);
+    background: #1c1c1e;
     border-top: 0.5px solid var(--separator);
     display: none;
     padding: 8px 0 calc(16px + var(--safe-bottom));
@@ -1174,6 +1170,7 @@ const state = {
   scheduleMonth: new Date().getMonth(),
   scheduleYear: new Date().getFullYear(),
   scheduleData: [],
+  schedulePreloaded: null,
   currentModalDate: null,
 };
 
@@ -1283,7 +1280,10 @@ function loadInitialData(onDone) {
   }, 5000);
   const clearTimers = () => { clearTimeout(t1); clearTimeout(t2); };
 
-  api('getInitialData')
+  // Текущий месяц для расписания (грузим вместе со стартовыми данными)
+  const ym = state.scheduleYear + '-' + String(state.scheduleMonth + 1).padStart(2, '0');
+
+  api('getInitialData', { yearMonth: ym })
     .then((data) => {
       clearTimers();
       state.bottles = data.bottles || [];
@@ -1291,6 +1291,11 @@ function loadInitialData(onDone) {
       state.inventories = data.inventories || [];
       state.activeInventory = data.activeInventory || null;
       state.measurements = data.measurements || [];
+      // Расписание пришло вместе — сохраняем, чтобы не делать отдельный запрос
+      if (data.scheduleMonth === ym) {
+        state.scheduleData = data.schedule || [];
+        state.schedulePreloaded = ym;
+      }
       finishLoad();
       if (onDone) onDone();
     })
@@ -1606,26 +1611,31 @@ function renderHistory() {
 const RECIPES_CACHE_KEY = 'barhelper_recipes_v1';
 
 function loadRecipesIfNeeded() {
-  // Уже загружены в этой сессии
-  if (state.recipesLoaded) {
+  // Уже загружены в этой сессии и не пусто
+  if (state.recipesLoaded && state.recipes.length > 0) {
     renderRecipesList();
     return;
   }
 
-  // Пробуем взять из кеша браузера — мгновенно
+  // Пробуем взять из кеша браузера — но только если он НЕ пустой
   try {
     const cached = localStorage.getItem(RECIPES_CACHE_KEY);
     if (cached) {
-      state.recipes = JSON.parse(cached);
-      state.recipesLoaded = true;
-      renderRecipesList();
-      // Тихо обновим в фоне на случай если рецепты изменились
-      refreshRecipesInBackground();
-      return;
+      const parsed = JSON.parse(cached);
+      if (parsed && parsed.length > 0) {
+        state.recipes = parsed;
+        state.recipesLoaded = true;
+        renderRecipesList();
+        refreshRecipesInBackground();
+        return;
+      } else {
+        // Пустой кеш — выбрасываем, грузим заново
+        localStorage.removeItem(RECIPES_CACHE_KEY);
+      }
     }
   } catch (e) {}
 
-  // Кеша нет — показываем загрузку и грузим с сервера
+  // Грузим с сервера
   const list = document.getElementById('recipes-list');
   list.innerHTML = '<div class="spinner-wrap"><div class="spinner"></div><div class="loading-text">Загружаю рецепты...</div></div>';
 
@@ -1633,7 +1643,10 @@ function loadRecipesIfNeeded() {
     .then((data) => {
       state.recipes = data || [];
       state.recipesLoaded = true;
-      try { localStorage.setItem(RECIPES_CACHE_KEY, JSON.stringify(state.recipes)); } catch (e) {}
+      // Кешируем ТОЛЬКО непустой результат
+      if (state.recipes.length > 0) {
+        try { localStorage.setItem(RECIPES_CACHE_KEY, JSON.stringify(state.recipes)); } catch (e) {}
+      }
       renderRecipesList();
     })
     .catch((err) => {
@@ -1645,11 +1658,11 @@ function refreshRecipesInBackground() {
   api('getRecipes')
     .then((data) => {
       const fresh = data || [];
+      if (fresh.length === 0) return; // не затираем кеш пустотой
       const freshStr = JSON.stringify(fresh);
       if (freshStr !== JSON.stringify(state.recipes)) {
         state.recipes = fresh;
         try { localStorage.setItem(RECIPES_CACHE_KEY, freshStr); } catch (e) {}
-        // Перерисуем только если мы сейчас на вкладке ТТК (списком)
         if (state.currentScreen === 'recipes' &&
             document.getElementById('screen-recipes').classList.contains('active')) {
           renderRecipesList();
@@ -1827,9 +1840,18 @@ function renderMeRow() {
 }
 
 function loadSchedule() {
+  const ym = state.scheduleYear + '-' + String(state.scheduleMonth + 1).padStart(2, '0');
+
+  // Если данные этого месяца уже пришли вместе со стартовой загрузкой — рисуем сразу
+  if (state.schedulePreloaded === ym) {
+    state.schedulePreloaded = null; // используем один раз
+    document.getElementById('schedule-loading').style.display = 'none';
+    renderCalendar();
+    return;
+  }
+
   document.getElementById('schedule-loading').style.display = 'flex';
   document.getElementById('calendar-grid').innerHTML = '';
-  const ym = state.scheduleYear + '-' + String(state.scheduleMonth + 1).padStart(2, '0');
   api('getSchedule', { yearMonth: ym })
     .then((data) => {
       state.scheduleData = data || [];
