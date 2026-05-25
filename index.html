@@ -509,6 +509,35 @@
   .recipe-name { font-weight: 600; font-size: 17px; }
   .recipe-cat { font-size: 13px; color: var(--label-2); margin-top: 2px; }
 
+  .recipe-description {
+    font-size: 14px;
+    color: var(--label-2);
+    line-height: 1.5;
+    background: var(--surface);
+    border-radius: 12px;
+    padding: 14px 16px;
+    margin-bottom: 16px;
+  }
+  .recipe-meta-row {
+    display: flex;
+    padding: 11px 16px;
+    border-bottom: 0.5px solid var(--separator);
+    gap: 12px;
+  }
+  .recipe-meta-row:last-child { border-bottom: none; }
+  .recipe-meta-label {
+    font-size: 14px;
+    color: var(--label-2);
+    width: 90px;
+    flex-shrink: 0;
+  }
+  .recipe-meta-value {
+    font-size: 14px;
+    color: var(--label);
+    font-weight: 500;
+    flex: 1;
+  }
+
   /* ============ SEGMENTED CONTROL (iOS) ============ */
   .segmented {
     background: var(--surface-2);
@@ -962,6 +991,10 @@
     <div class="segmented-option active" data-size="small">—</div>
     <div class="segmented-option" data-size="large">—</div>
   </div>
+
+  <div id="recipe-description" class="recipe-description" style="display:none;"></div>
+
+  <div id="recipe-meta" class="inset-group" style="display:none;"></div>
 
   <div class="group-header">Состав</div>
   <div class="inset-group">
@@ -1583,15 +1616,26 @@ function renderRecipesList() {
   let html = '';
   Object.keys(byCategory).forEach(cat => {
     html += '<div class="group-header">' + escapeHtml(cat) + '</div>';
-    html += byCategory[cat].map(r => `
+    html += byCategory[cat].map(r => {
+      let sub;
+      if (r.large_volume > 0) {
+        sub = r.small_volume + ' мл · ' + r.large_volume + ' мл';
+      } else if (r.small_volume > 0) {
+        sub = (r.small_label ? r.small_label : (r.small_volume + ' мл'));
+      } else {
+        const n = (r.ingredients || []).length;
+        sub = n + ' ' + (n === 1 ? 'ингредиент' : (n < 5 ? 'ингредиента' : 'ингредиентов'));
+      }
+      return `
       <div class="recipe-card" data-id="${escapeHtml(r.id)}">
         <div>
           <div class="recipe-name">${escapeHtml(r.name)}</div>
-          <div class="recipe-cat">${r.small_volume} мл · ${r.large_volume} мл</div>
+          <div class="recipe-cat">${escapeHtml(sub)}</div>
         </div>
         <svg class="inset-row-chevron" viewBox="0 0 7 12" style="margin-left: 8px;"><path d="M1 1l5 5-5 5" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
       </div>
-    `).join('');
+    `;
+    }).join('');
   });
   list.innerHTML = html;
   list.querySelectorAll('.recipe-card').forEach(card => {
@@ -1608,21 +1652,28 @@ function openRecipe(id) {
   document.getElementById('recipe-detail-title').textContent = recipe.name;
 
   const seg = document.getElementById('recipe-segmented');
-  const opts = seg.querySelectorAll('.segmented-option');
-  opts[0].textContent = recipe.small_label || ('Small ' + recipe.small_volume + 'мл');
-  opts[1].textContent = recipe.large_label || ('Large ' + recipe.large_volume + 'мл');
-  opts[0].classList.add('active');
-  opts[1].classList.remove('active');
-  opts.forEach(opt => {
-    opt.onclick = () => {
-      state.currentRecipeSize = opt.dataset.size;
-      opts.forEach(o => {
-        if (o === opt) o.classList.add('active');
-        else o.classList.remove('active');
-      });
-      renderRecipeDetails();
-    };
-  });
+  const hasTwoSizes = recipe.large_volume > 0;
+
+  if (hasTwoSizes) {
+    seg.style.display = 'flex';
+    const opts = seg.querySelectorAll('.segmented-option');
+    opts[0].textContent = recipe.small_label || ('Small ' + recipe.small_volume + ' мл');
+    opts[1].textContent = recipe.large_label || ('Large ' + recipe.large_volume + ' мл');
+    opts[0].classList.add('active');
+    opts[1].classList.remove('active');
+    opts.forEach(opt => {
+      opt.onclick = () => {
+        state.currentRecipeSize = opt.dataset.size;
+        opts.forEach(o => {
+          if (o === opt) o.classList.add('active');
+          else o.classList.remove('active');
+        });
+        renderRecipeDetails();
+      };
+    });
+  } else {
+    seg.style.display = 'none';
+  }
 
   renderRecipeDetails();
   document.getElementById('screen-recipes').classList.remove('active');
@@ -1639,6 +1690,33 @@ function renderRecipeDetails() {
   const r = state.currentRecipe;
   const isSmall = state.currentRecipeSize === 'small';
 
+  // Описание (если есть)
+  const descEl = document.getElementById('recipe-description');
+  if (r.description && r.description.trim()) {
+    descEl.style.display = 'block';
+    descEl.textContent = r.description;
+  } else {
+    descEl.style.display = 'none';
+  }
+
+  // Метод / Бокал / Гарниш (если есть)
+  const metaEl = document.getElementById('recipe-meta');
+  const metaRows = [];
+  if (r.method && r.method.trim()) metaRows.push(['Метод', r.method]);
+  if (r.glass && r.glass.trim()) metaRows.push(['Бокал/лёд', r.glass]);
+  if (r.garnish && r.garnish.trim() && r.garnish.trim() !== '—') metaRows.push(['Гарниш', r.garnish]);
+  if (metaRows.length > 0) {
+    metaEl.style.display = 'block';
+    metaEl.innerHTML = metaRows.map(m =>
+      '<div class="recipe-meta-row">' +
+      '<div class="recipe-meta-label">' + escapeHtml(m[0]) + '</div>' +
+      '<div class="recipe-meta-value">' + escapeHtml(m[1]) + '</div></div>'
+    ).join('');
+  } else {
+    metaEl.style.display = 'none';
+  }
+
+  // Ингредиенты
   const ingrEl = document.getElementById('recipe-ingredients');
   if (!r.ingredients || r.ingredients.length === 0) {
     ingrEl.innerHTML = '<div class="ingredients-row"><div class="ing-name" style="color: var(--label-2)">Состав не указан</div></div>';
@@ -1652,6 +1730,7 @@ function renderRecipeDetails() {
     }).join('');
   }
 
+  // Шаги
   const stepsEl = document.getElementById('recipe-steps');
   if (!r.steps || r.steps.length === 0) {
     stepsEl.innerHTML = '<div class="step-row"><div class="step-text" style="color: var(--label-2)">Шаги не указаны</div></div>';
