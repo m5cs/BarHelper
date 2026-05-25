@@ -1163,6 +1163,7 @@ const state = {
   bottles: [],
   users: [],
   recipes: [],
+  recipesLoaded: false,
   inventories: [],
   activeInventory: null,
   measurements: [],
@@ -1242,7 +1243,7 @@ function switchTab(screen) {
       document.getElementById('screen-inv').classList.add('active');
     } else if (screen === 'recipes') {
       document.getElementById('screen-recipes').classList.add('active');
-      renderRecipesList();
+      loadRecipesIfNeeded();
     } else if (screen === 'schedule') {
       document.getElementById('screen-schedule').classList.add('active');
       renderMeRow();
@@ -1287,7 +1288,6 @@ function loadInitialData(onDone) {
       clearTimers();
       state.bottles = data.bottles || [];
       state.users = data.users || [];
-      state.recipes = data.recipes || [];
       state.inventories = data.inventories || [];
       state.activeInventory = data.activeInventory || null;
       state.measurements = data.measurements || [];
@@ -1601,6 +1601,64 @@ function renderHistory() {
 }
 
 // ============ ТТК ============
+// Ленивая загрузка рецептов: грузим только при первом открытии вкладки.
+// Кешируем в localStorage — при следующих заходах открываются мгновенно.
+const RECIPES_CACHE_KEY = 'barhelper_recipes_v1';
+
+function loadRecipesIfNeeded() {
+  // Уже загружены в этой сессии
+  if (state.recipesLoaded) {
+    renderRecipesList();
+    return;
+  }
+
+  // Пробуем взять из кеша браузера — мгновенно
+  try {
+    const cached = localStorage.getItem(RECIPES_CACHE_KEY);
+    if (cached) {
+      state.recipes = JSON.parse(cached);
+      state.recipesLoaded = true;
+      renderRecipesList();
+      // Тихо обновим в фоне на случай если рецепты изменились
+      refreshRecipesInBackground();
+      return;
+    }
+  } catch (e) {}
+
+  // Кеша нет — показываем загрузку и грузим с сервера
+  const list = document.getElementById('recipes-list');
+  list.innerHTML = '<div class="spinner-wrap"><div class="spinner"></div><div class="loading-text">Загружаю рецепты...</div></div>';
+
+  api('getRecipes')
+    .then((data) => {
+      state.recipes = data || [];
+      state.recipesLoaded = true;
+      try { localStorage.setItem(RECIPES_CACHE_KEY, JSON.stringify(state.recipes)); } catch (e) {}
+      renderRecipesList();
+    })
+    .catch((err) => {
+      list.innerHTML = '<div class="empty-state"><div class="title">Не удалось загрузить</div><div class="sub">' + escapeHtml(err.message || '') + '</div></div>';
+    });
+}
+
+function refreshRecipesInBackground() {
+  api('getRecipes')
+    .then((data) => {
+      const fresh = data || [];
+      const freshStr = JSON.stringify(fresh);
+      if (freshStr !== JSON.stringify(state.recipes)) {
+        state.recipes = fresh;
+        try { localStorage.setItem(RECIPES_CACHE_KEY, freshStr); } catch (e) {}
+        // Перерисуем только если мы сейчас на вкладке ТТК (списком)
+        if (state.currentScreen === 'recipes' &&
+            document.getElementById('screen-recipes').classList.contains('active')) {
+          renderRecipesList();
+        }
+      }
+    })
+    .catch(() => {});
+}
+
 function renderRecipesList() {
   const list = document.getElementById('recipes-list');
   if (state.recipes.length === 0) {
