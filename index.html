@@ -536,6 +536,92 @@
     flex: 1;
   }
 
+  /* ============ КАТЕГОРИИ ТТК ============ */
+  .category-card {
+    background: var(--surface);
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 8px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    transition: opacity 0.15s;
+  }
+  .category-card:active { opacity: 0.7; }
+  .category-icon {
+    width: 38px; height: 38px;
+    border-radius: 9px;
+    display: flex; align-items: center; justify-content: center;
+    margin-right: 14px;
+    flex-shrink: 0;
+  }
+  .category-icon svg { width: 22px; height: 22px; fill: #fff; }
+  .category-info { flex: 1; min-width: 0; }
+  .category-name { font-weight: 600; font-size: 17px; }
+  .category-count { font-size: 13px; color: var(--label-2); margin-top: 2px; }
+
+  /* ============ ЯКОРНАЯ ПАНЕЛЬ (быстрый переход к секциям) ============ */
+  .anchor-bar {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    padding: 10px 0;
+    margin-bottom: 8px;
+    background: var(--bg);
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+  .anchor-bar::-webkit-scrollbar { display: none; }
+  .anchor-chip {
+    flex-shrink: 0;
+    background: var(--surface-2);
+    color: var(--label);
+    padding: 8px 16px;
+    border-radius: 100px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    white-space: nowrap;
+    border: none;
+    transition: opacity 0.15s;
+  }
+  .anchor-chip:active { opacity: 0.6; }
+  .anchor-chip.active {
+    background: var(--tint);
+    color: #000;
+  }
+
+  /* Секции рецепта */
+  .recipe-section { margin-bottom: 22px; scroll-margin-top: 56px; }
+  .recipe-section-title {
+    font-size: 13px;
+    color: var(--label-2);
+    text-transform: uppercase;
+    letter-spacing: 0.2px;
+    margin: 0 16px 6px;
+    font-weight: 600;
+  }
+
+  /* Аллергены */
+  .allergen-chips { display: flex; flex-wrap: wrap; gap: 8px; padding: 4px 0; }
+  .allergen-chip {
+    background: rgba(255,159,10,0.15);
+    color: var(--orange);
+    padding: 8px 14px;
+    border-radius: 100px;
+    font-size: 14px;
+    font-weight: 600;
+  }
+  .allergen-none {
+    color: var(--label-2);
+    font-size: 14px;
+    padding: 4px 16px;
+  }
+
   /* ============ SEGMENTED CONTROL (iOS) ============ */
   .segmented {
     background: var(--surface-2);
@@ -966,19 +1052,25 @@
   <button class="save-button" id="save-btn" disabled>Сохранить замер</button>
 </div>
 
-<!-- ==================== ТТК (СПИСОК) ==================== -->
+<!-- ==================== ТТК (СПИСОК: категории / рецепты) ==================== -->
 <div id="screen-recipes" class="screen">
-  <div class="nav-title"><h1>ТТК</h1></div>
+  <button class="nav-bar-back" id="recipes-back" onclick="recipesBack()" style="display:none;">
+    <svg width="11" height="20" viewBox="0 0 11 20" style="margin-right: 4px;">
+      <path d="M9 1L1 10l8 9" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+    Категории
+  </button>
+  <div class="nav-title"><h1 id="recipes-title">ТТК</h1></div>
   <div id="recipes-list"></div>
 </div>
 
 <!-- ==================== ТТК (ДЕТАЛИ) ==================== -->
 <div id="screen-recipe-detail" class="screen">
-  <button class="nav-bar-back" onclick="closeRecipe()">
+  <button class="nav-bar-back" id="recipe-back-btn" onclick="closeRecipe()">
     <svg width="11" height="20" viewBox="0 0 11 20" style="margin-right: 4px;">
       <path d="M9 1L1 10l8 9" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
     </svg>
-    ТТК
+    <span id="recipe-back-label">Назад</span>
   </button>
 
   <div class="nav-title"><h1 id="recipe-detail-title">—</h1></div>
@@ -988,19 +1080,11 @@
     <div class="segmented-option" data-size="large">—</div>
   </div>
 
-  <div id="recipe-description" class="recipe-description" style="display:none;"></div>
+  <!-- Якорная панель быстрого перехода к секциям -->
+  <div class="anchor-bar" id="recipe-anchors"></div>
 
-  <div id="recipe-meta" class="inset-group" style="display:none;"></div>
-
-  <div class="group-header">Состав</div>
-  <div class="inset-group">
-    <div id="recipe-ingredients"></div>
-  </div>
-
-  <div class="group-header">Приготовление</div>
-  <div class="inset-group">
-    <div id="recipe-steps"></div>
-  </div>
+  <!-- Секции рецепта (рендерятся динамически) -->
+  <div id="recipe-sections"></div>
 </div>
 
 <!-- ==================== ГРАФИК ==================== -->
@@ -1166,6 +1250,7 @@ const state = {
   lastCalc: null,
   currentScreen: 'schedule',
   currentRecipe: null,
+  currentCategory: null,
   currentRecipeSize: 'small',
   scheduleMonth: new Date().getMonth(),
   scheduleYear: new Date().getFullYear(),
@@ -1240,6 +1325,7 @@ function switchTab(screen) {
       document.getElementById('screen-inv').classList.add('active');
     } else if (screen === 'recipes') {
       document.getElementById('screen-recipes').classList.add('active');
+      state.currentCategory = null; // всегда начинаем с категорий
       loadRecipesIfNeeded();
     } else if (screen === 'schedule') {
       document.getElementById('screen-schedule').classList.add('active');
@@ -1613,7 +1699,7 @@ const RECIPES_CACHE_KEY = 'barhelper_recipes_v1';
 function loadRecipesIfNeeded() {
   // Уже загружены в этой сессии и не пусто
   if (state.recipesLoaded && state.recipes.length > 0) {
-    renderRecipesList();
+    renderRecipesScreen();
     return;
   }
 
@@ -1625,7 +1711,7 @@ function loadRecipesIfNeeded() {
       if (parsed && parsed.length > 0) {
         state.recipes = parsed;
         state.recipesLoaded = true;
-        renderRecipesList();
+        renderRecipesScreen();
         refreshRecipesInBackground();
         return;
       } else {
@@ -1647,7 +1733,7 @@ function loadRecipesIfNeeded() {
       if (state.recipes.length > 0) {
         try { localStorage.setItem(RECIPES_CACHE_KEY, JSON.stringify(state.recipes)); } catch (e) {}
       }
-      renderRecipesList();
+      renderRecipesScreen();
     })
     .catch((err) => {
       list.innerHTML = '<div class="empty-state"><div class="title">Не удалось загрузить</div><div class="sub">' + escapeHtml(err.message || '') + '</div></div>';
@@ -1665,53 +1751,134 @@ function refreshRecipesInBackground() {
         try { localStorage.setItem(RECIPES_CACHE_KEY, freshStr); } catch (e) {}
         if (state.currentScreen === 'recipes' &&
             document.getElementById('screen-recipes').classList.contains('active')) {
-          renderRecipesList();
+          renderRecipesScreen();
         }
       }
     })
     .catch(() => {});
 }
 
-function renderRecipesList() {
-  const list = document.getElementById('recipes-list');
+// Порядок и иконки категорий
+const CATEGORY_META = {
+  'Авторские коктейли':    { color: '#bf5af2', icon: 'star' },
+  'Классические коктейли': { color: '#0a84ff', icon: 'glass' },
+  'Чайные лимонады':       { color: '#30d158', icon: 'leaf' },
+  'Молочные коктейли':     { color: '#ff9f0a', icon: 'cup' },
+  'Авторские чаи':         { color: '#ff6482', icon: 'tea' },
+  'Полуфабрикаты':         { color: '#8e8e93', icon: 'flask' },
+};
+const CATEGORY_ICONS = {
+  star:  '<path d="M12 2l2.9 6.3 6.9.7-5.1 4.6 1.4 6.8L12 17.8 5.9 20.4l1.4-6.8L2.2 9l6.9-.7z"/>',
+  glass: '<path d="M5 3h14l-2 9a5 5 0 01-10 0L5 3zm7 13v3m-4 0h8" stroke="#fff" stroke-width="1.5" fill="none" stroke-linecap="round"/>',
+  leaf:  '<path d="M4 20C4 10 12 4 20 4c0 10-8 16-16 16zm0 0c2-6 6-9 10-11" stroke="#fff" stroke-width="1.5" fill="none" stroke-linecap="round"/>',
+  cup:   '<path d="M6 8h12v8a4 4 0 01-4 4h-4a4 4 0 01-4-4V8zm12 2h2a2 2 0 010 4h-2" stroke="#fff" stroke-width="1.5" fill="none"/>',
+  tea:   '<path d="M5 8h11v6a4 4 0 01-4 4H9a4 4 0 01-4-4V8zm11 2h2a2 2 0 010 4h-2M7 5c0-1 1-1 1-2M11 5c0-1 1-1 1-2" stroke="#fff" stroke-width="1.5" fill="none" stroke-linecap="round"/>',
+  flask: '<path d="M9 3h6M10 3v6l-5 9a2 2 0 002 3h10a2 2 0 002-3l-5-9V3" stroke="#fff" stroke-width="1.5" fill="none" stroke-linejoin="round"/>',
+};
+
+function renderRecipesScreen() {
   if (state.recipes.length === 0) {
-    list.innerHTML = '<div class="empty-state"><div class="title">Рецептов пока нет</div><div class="sub">Добавь их в лист Recipes</div></div>';
+    document.getElementById('recipes-list').innerHTML =
+      '<div class="empty-state"><div class="title">Рецептов пока нет</div><div class="sub">Добавь их в лист Recipes</div></div>';
     return;
   }
-  const byCategory = {};
+  if (state.currentCategory) renderCategoryRecipes(state.currentCategory);
+  else renderCategoriesList();
+}
+
+// Уровень 1 — список категорий
+function renderCategoriesList() {
+  document.getElementById('recipes-back').style.display = 'none';
+  document.getElementById('recipes-title').textContent = 'ТТК';
+
+  // Группируем, сохраняя порядок из CATEGORY_META, затем прочие
+  const counts = {};
+  const order = [];
   state.recipes.forEach(r => {
     const cat = r.category || 'Без категории';
-    if (!byCategory[cat]) byCategory[cat] = [];
-    byCategory[cat].push(r);
+    if (!(cat in counts)) { counts[cat] = 0; order.push(cat); }
+    counts[cat]++;
   });
-  let html = '';
-  Object.keys(byCategory).forEach(cat => {
-    html += '<div class="group-header">' + escapeHtml(cat) + '</div>';
-    html += byCategory[cat].map(r => {
-      let sub;
-      if (r.large_volume > 0) {
-        sub = r.small_volume + ' мл · ' + r.large_volume + ' мл';
-      } else if (r.small_volume > 0) {
-        sub = (r.small_label ? r.small_label : (r.small_volume + ' мл'));
-      } else {
-        const n = (r.ingredients || []).length;
-        sub = n + ' ' + (n === 1 ? 'ингредиент' : (n < 5 ? 'ингредиента' : 'ингредиентов'));
-      }
-      return `
+  const known = Object.keys(CATEGORY_META).filter(c => c in counts);
+  const others = order.filter(c => !(c in CATEGORY_META));
+  const cats = known.concat(others);
+
+  const list = document.getElementById('recipes-list');
+  list.innerHTML = cats.map(cat => {
+    const meta = CATEGORY_META[cat] || { color: '#8e8e93', icon: 'glass' };
+    const n = counts[cat];
+    const word = n === 1 ? 'рецепт' : (n < 5 ? 'рецепта' : 'рецептов');
+    return `
+      <div class="category-card" data-cat="${escapeHtml(cat)}">
+        <div style="display:flex;align-items:center;flex:1;min-width:0;">
+          <div class="category-icon" style="background:${meta.color}">
+            <svg viewBox="0 0 24 24">${CATEGORY_ICONS[meta.icon] || ''}</svg>
+          </div>
+          <div class="category-info">
+            <div class="category-name">${escapeHtml(cat)}</div>
+            <div class="category-count">${n} ${word}</div>
+          </div>
+        </div>
+        <svg class="inset-row-chevron" viewBox="0 0 7 12"><path d="M1 1l5 5-5 5" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </div>`;
+  }).join('');
+  list.querySelectorAll('.category-card').forEach(card => {
+    card.addEventListener('click', () => {
+      state.currentCategory = card.dataset.cat;
+      renderCategoryRecipes(card.dataset.cat);
+      window.scrollTo({ top: 0 });
+    });
+  });
+}
+
+// Уровень 2 — рецепты выбранной категории
+function renderCategoryRecipes(cat) {
+  document.getElementById('recipes-back').style.display = 'flex';
+  document.getElementById('recipes-title').textContent = cat;
+
+  const recipes = state.recipes.filter(r => (r.category || 'Без категории') === cat);
+  const list = document.getElementById('recipes-list');
+  list.innerHTML = recipes.map(r => {
+    let sub;
+    if (r.large_volume > 0) sub = r.small_volume + ' мл · ' + r.large_volume + ' мл';
+    else if (r.small_volume > 0) sub = (r.small_label ? r.small_label : (r.small_volume + ' мл'));
+    else { const n = (r.ingredients || []).length; sub = n + ' ' + (n === 1 ? 'ингредиент' : (n < 5 ? 'ингредиента' : 'ингредиентов')); }
+    return `
       <div class="recipe-card" data-id="${escapeHtml(r.id)}">
         <div>
           <div class="recipe-name">${escapeHtml(r.name)}</div>
           <div class="recipe-cat">${escapeHtml(sub)}</div>
         </div>
         <svg class="inset-row-chevron" viewBox="0 0 7 12" style="margin-left: 8px;"><path d="M1 1l5 5-5 5" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
-      </div>
-    `;
-    }).join('');
-  });
-  list.innerHTML = html;
+      </div>`;
+  }).join('');
   list.querySelectorAll('.recipe-card').forEach(card => {
     card.addEventListener('click', () => openRecipe(card.dataset.id));
   });
+}
+
+// Кнопка «назад» на экране списка (из рецептов категории → к категориям)
+function recipesBack() {
+  state.currentCategory = null;
+  renderCategoriesList();
+  window.scrollTo({ top: 0 });
+}
+
+// Определение аллергенов из состава по ключевым словам
+function detectAllergens(ingredients) {
+  const found = new Set();
+  const rules = [
+    [/мёд|мед/i, 'Мёд'],
+    [/белок|яйц|яиц/i, 'Яйцо'],
+    [/молок|сливк|мороже|калпис/i, 'Молоко'],
+    [/желатин/i, 'Желатин'],
+    [/орех|миндал|фундук|арахис/i, 'Орехи'],
+    [/сельдерей/i, 'Сельдерей'],
+  ];
+  (ingredients || []).forEach(ing => {
+    rules.forEach(([re, label]) => { if (re.test(ing.name)) found.add(label); });
+  });
+  return Array.from(found);
 }
 
 function openRecipe(id) {
@@ -1721,32 +1888,29 @@ function openRecipe(id) {
   state.currentRecipeSize = 'small';
 
   document.getElementById('recipe-detail-title').textContent = recipe.name;
+  document.getElementById('recipe-back-label').textContent = recipe.category || 'Назад';
 
   const seg = document.getElementById('recipe-segmented');
   const hasTwoSizes = recipe.large_volume > 0;
-
   if (hasTwoSizes) {
     seg.style.display = 'flex';
     const opts = seg.querySelectorAll('.segmented-option');
-    opts[0].textContent = recipe.small_label || ('Small ' + recipe.small_volume + ' мл');
-    opts[1].textContent = recipe.large_label || ('Large ' + recipe.large_volume + ' мл');
+    opts[0].textContent = recipe.small_label || ('Малый ' + recipe.small_volume + ' мл');
+    opts[1].textContent = recipe.large_label || ('Большой ' + recipe.large_volume + ' мл');
     opts[0].classList.add('active');
     opts[1].classList.remove('active');
     opts.forEach(opt => {
       opt.onclick = () => {
         state.currentRecipeSize = opt.dataset.size;
-        opts.forEach(o => {
-          if (o === opt) o.classList.add('active');
-          else o.classList.remove('active');
-        });
-        renderRecipeDetails();
+        opts.forEach(o => { if (o === opt) o.classList.add('active'); else o.classList.remove('active'); });
+        renderRecipeSections();
       };
     });
   } else {
     seg.style.display = 'none';
   }
 
-  renderRecipeDetails();
+  renderRecipeSections();
   document.getElementById('screen-recipes').classList.remove('active');
   document.getElementById('screen-recipe-detail').classList.add('active');
   window.scrollTo({ top: 0 });
@@ -1755,67 +1919,102 @@ function openRecipe(id) {
 function closeRecipe() {
   document.getElementById('screen-recipe-detail').classList.remove('active');
   document.getElementById('screen-recipes').classList.add('active');
+  renderRecipesScreen(); // вернётся к рецептам категории
 }
 
-function renderRecipeDetails() {
+// Рендер секций карточки + якорная панель
+function renderRecipeSections() {
   const r = state.currentRecipe;
   const isSmall = state.currentRecipeSize === 'small';
 
-  // Описание (если есть)
-  const descEl = document.getElementById('recipe-description');
-  if (r.description && r.description.trim()) {
-    descEl.style.display = 'block';
-    descEl.textContent = r.description;
+  const sections = []; // { key, title, html }
+
+  // 1. Состав
+  let ingrHtml;
+  if (!r.ingredients || r.ingredients.length === 0) {
+    ingrHtml = '<div class="ingredients-row"><div class="ing-name" style="color: var(--label-2)">Состав не указан</div></div>';
   } else {
-    descEl.style.display = 'none';
+    ingrHtml = r.ingredients.map(ing => {
+      const amount = isSmall ? ing.amount_small : ing.amount_large;
+      const unit = ing.unit ? ' ' + ing.unit : '';
+      return '<div class="ingredients-row"><div class="ing-name">' + escapeHtml(ing.name) +
+             '</div><div class="ing-amount">' + amount + unit + '</div></div>';
+    }).join('');
+  }
+  sections.push({ key: 'sostav', title: 'Состав', html: '<div class="inset-group">' + ingrHtml + '</div>' });
+
+  // 2. Этапы приготовления
+  if (r.steps && r.steps.length > 0) {
+    const stepsHtml = r.steps.map(s => {
+      const isWarn = s.step_num === 0;
+      const isNote = s.text.trim().startsWith('*');
+      const cls = isWarn ? 'warn' : (isNote ? 'note' : '');
+      const num = isWarn ? '!' : (isNote ? '*' : s.step_num);
+      return '<div class="step-row ' + cls + '"><div class="step-num">' + num +
+             '</div><div class="step-text">' + escapeHtml(s.text) + '</div></div>';
+    }).join('');
+    sections.push({ key: 'etapy', title: 'Этапы приготовления', html: '<div class="inset-group">' + stepsHtml + '</div>' });
   }
 
-  // Метод / Бокал / Гарниш (если есть)
-  const metaEl = document.getElementById('recipe-meta');
+  // 3. Подача (метод / бокал / гарниш)
   const metaRows = [];
   if (r.method && r.method.trim()) metaRows.push(['Метод', r.method]);
   if (r.glass && r.glass.trim()) metaRows.push(['Бокал/лёд', r.glass]);
   if (r.garnish && r.garnish.trim() && r.garnish.trim() !== '—') metaRows.push(['Гарниш', r.garnish]);
   if (metaRows.length > 0) {
-    metaEl.style.display = 'block';
-    metaEl.innerHTML = metaRows.map(m =>
-      '<div class="recipe-meta-row">' +
-      '<div class="recipe-meta-label">' + escapeHtml(m[0]) + '</div>' +
-      '<div class="recipe-meta-value">' + escapeHtml(m[1]) + '</div></div>'
+    const metaHtml = metaRows.map(m =>
+      '<div class="recipe-meta-row"><div class="recipe-meta-label">' + escapeHtml(m[0]) +
+      '</div><div class="recipe-meta-value">' + escapeHtml(m[1]) + '</div></div>'
     ).join('');
-  } else {
-    metaEl.style.display = 'none';
+    sections.push({ key: 'podacha', title: 'Подача', html: '<div class="inset-group">' + metaHtml + '</div>' });
   }
 
-  // Ингредиенты
-  const ingrEl = document.getElementById('recipe-ingredients');
-  if (!r.ingredients || r.ingredients.length === 0) {
-    ingrEl.innerHTML = '<div class="ingredients-row"><div class="ing-name" style="color: var(--label-2)">Состав не указан</div></div>';
+  // 4. Аллергены
+  const allergens = detectAllergens(r.ingredients);
+  let allergHtml;
+  if (allergens.length > 0) {
+    allergHtml = '<div class="allergen-chips">' +
+      allergens.map(a => '<span class="allergen-chip">' + escapeHtml(a) + '</span>').join('') + '</div>';
   } else {
-    ingrEl.innerHTML = r.ingredients.map(ing => {
-      const amount = isSmall ? ing.amount_small : ing.amount_large;
-      const unit = ing.unit ? ' ' + ing.unit : '';
-      return '<div class="ingredients-row">' +
-             '<div class="ing-name">' + escapeHtml(ing.name) + '</div>' +
-             '<div class="ing-amount">' + amount + unit + '</div></div>';
-    }).join('');
+    allergHtml = '<div class="allergen-none">Явных аллергенов не обнаружено</div>';
+  }
+  sections.push({ key: 'allerg', title: 'Аллергены', html: allergHtml });
+
+  // 5. Описание (если есть)
+  if (r.description && r.description.trim()) {
+    sections.push({
+      key: 'opisanie', title: 'Описание',
+      html: '<div class="recipe-description" style="margin-bottom:0">' + escapeHtml(r.description) + '</div>'
+    });
   }
 
-  // Шаги
-  const stepsEl = document.getElementById('recipe-steps');
-  if (!r.steps || r.steps.length === 0) {
-    stepsEl.innerHTML = '<div class="step-row"><div class="step-text" style="color: var(--label-2)">Шаги не указаны</div></div>';
-  } else {
-    stepsEl.innerHTML = r.steps.map(s => {
-      const isWarn = s.step_num === 0;
-      const isNote = s.text.trim().startsWith('*');
-      const cls = isWarn ? 'warn' : (isNote ? 'note' : '');
-      const num = isWarn ? '!' : (isNote ? '*' : s.step_num);
-      return '<div class="step-row ' + cls + '">' +
-             '<div class="step-num">' + num + '</div>' +
-             '<div class="step-text">' + escapeHtml(s.text) + '</div></div>';
-    }).join('');
-  }
+  // Якорная панель
+  const anchorBar = document.getElementById('recipe-anchors');
+  anchorBar.innerHTML = sections.map((s, i) =>
+    '<button class="anchor-chip' + (i === 0 ? ' active' : '') + '" data-key="' + s.key + '">' +
+    escapeHtml(s.title) + '</button>'
+  ).join('');
+
+  // Секции
+  const container = document.getElementById('recipe-sections');
+  container.innerHTML = sections.map(s =>
+    '<div class="recipe-section" id="sec-' + s.key + '">' +
+    '<div class="recipe-section-title">' + escapeHtml(s.title) + '</div>' +
+    s.html + '</div>'
+  ).join('');
+
+  // Клик по якорю — скролл к секции
+  anchorBar.querySelectorAll('.anchor-chip').forEach(chip => {
+    chip.addEventListener('click', () => {
+      const sec = document.getElementById('sec-' + chip.dataset.key);
+      if (sec) {
+        const y = sec.getBoundingClientRect().top + window.pageYOffset - 52;
+        window.scrollTo({ top: y, behavior: 'smooth' });
+      }
+      anchorBar.querySelectorAll('.anchor-chip').forEach(c => c.classList.remove('active'));
+      chip.classList.add('active');
+    });
+  });
 }
 
 // ============ ГРАФИК ============
