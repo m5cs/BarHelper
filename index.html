@@ -1364,10 +1364,24 @@ function tryLogin() {
 function showApp() {
   document.getElementById('screen-pin').classList.remove('active');
   document.getElementById('tab-bar').classList.add('show');
-  // Сначала загружаем данные, потом показываем график
-  // (иначе renderMeRow упадёт на пустом state.users)
+
+  // Сразу показываем экран графика со спиннером (без мелькания и двойного перехода).
+  state.currentScreen = 'schedule';
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById('screen-schedule').classList.add('active');
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  const schedTab = document.querySelector('.tab[data-screen="schedule"]');
+  if (schedTab) schedTab.classList.add('active');
+  // Спиннер графика на время загрузки
+  const schedLoading = document.getElementById('schedule-loading');
+  if (schedLoading) schedLoading.style.display = 'flex';
+  const calGrid = document.getElementById('calendar-grid');
+  if (calGrid) calGrid.innerHTML = '';
+
+  // Грузим данные. Когда придут — график отрисуется один раз (данные предзагружены).
   loadInitialData(() => {
-    switchTab('schedule');
+    renderMeRow();
+    loadSchedule();
   });
 }
 
