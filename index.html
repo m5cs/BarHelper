@@ -954,6 +954,67 @@
     display: inline-block;
   }
 
+  /* ============ ПРОФИЛЬ ============ */
+  .profile-head {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 12px 0 24px;
+  }
+  .profile-avatar {
+    width: 88px; height: 88px;
+    border-radius: 50%;
+    background: var(--surface-2) center/cover no-repeat;
+    margin-bottom: 14px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 34px; font-weight: 600; color: var(--label-2);
+    overflow: hidden;
+  }
+  .profile-name { font-size: 24px; font-weight: 700; }
+  .profile-role { font-size: 14px; color: var(--label-2); margin-top: 2px; }
+
+  .profile-salary { padding: 18px 16px; text-align: center; }
+  .salary-amount {
+    font-size: 34px; font-weight: 700; color: var(--green);
+    font-feature-settings: "tnum";
+  }
+  .salary-sub { font-size: 14px; color: var(--label-2); margin-top: 4px; }
+
+  .profile-row {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 14px 16px;
+    border-bottom: 0.5px solid var(--separator);
+    cursor: pointer;
+    transition: opacity 0.15s;
+  }
+  .profile-row:last-child { border-bottom: none; }
+  .profile-row:active { opacity: 0.6; }
+  .profile-row-text { font-size: 16px; }
+
+  .task-row {
+    display: flex; align-items: center; gap: 12px;
+    padding: 13px 16px;
+    border-bottom: 0.5px solid var(--separator);
+    cursor: pointer;
+  }
+  .task-row:last-child { border-bottom: none; }
+  .task-check {
+    width: 24px; height: 24px;
+    border-radius: 50%;
+    border: 2px solid var(--label-3);
+    flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.15s;
+  }
+  .task-row.done .task-check {
+    background: var(--green);
+    border-color: var(--green);
+  }
+  .task-check svg { width: 14px; height: 14px; opacity: 0; }
+  .task-row.done .task-check svg { opacity: 1; }
+  .task-text { font-size: 16px; flex: 1; }
+  .task-row.done .task-text { color: var(--label-3); text-decoration: line-through; }
+
   /* ============ DAY DETAIL MODAL (большие кнопки смен) ============ */
   .shift-card {
     background: var(--surface-2);
@@ -1273,6 +1334,44 @@
   </div>
 </div>
 
+<!-- ==================== ПРОФИЛЬ ==================== -->
+<div id="screen-profile" class="screen">
+  <div class="nav-title"><h1>Профиль</h1></div>
+
+  <!-- Шапка профиля: аватар + имя -->
+  <div class="profile-head">
+    <div class="profile-avatar" id="profile-avatar"></div>
+    <div class="profile-name" id="profile-name">—</div>
+    <div class="profile-role" id="profile-role">Бармен</div>
+  </div>
+
+  <!-- Зарплата -->
+  <div class="group-header">Зарплата за месяц</div>
+  <div class="inset-group">
+    <div class="profile-salary">
+      <div class="salary-amount" id="profile-salary">—</div>
+      <div class="salary-sub" id="profile-shifts">—</div>
+    </div>
+  </div>
+
+  <!-- Задачи на смену -->
+  <div class="group-header">Задачи на смену</div>
+  <div class="inset-group" id="profile-tasks"></div>
+
+  <!-- Обучение -->
+  <div class="group-header">Обучение</div>
+  <div class="inset-group">
+    <div class="profile-row" onclick="alert('Раздел в разработке')">
+      <div class="profile-row-text">Пройти аттестацию</div>
+      <svg class="inset-row-chevron" viewBox="0 0 7 12"><path d="M1 1l5 5-5 5" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </div>
+    <div class="profile-row" onclick="alert('Раздел в разработке')">
+      <div class="profile-row-text">Обучающие материалы</div>
+      <svg class="inset-row-chevron" viewBox="0 0 7 12"><path d="M1 1l5 5-5 5" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </div>
+  </div>
+</div>
+
 <!-- ==================== TAB BAR ==================== -->
 <div class="tab-bar" id="tab-bar">
   <button class="tab" data-screen="inv" onclick="switchTab('inv')">
@@ -1292,6 +1391,12 @@
       <svg viewBox="0 0 24 24"><path d="M19 4h-1V2h-2v2H8V2H6v2H5c-1.11 0-1.99.9-1.99 2L3 20c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V10h14v10zM5 8V6h14v2H5zm2 4h5v5H7z"/></svg>
     </div>
     <div class="tab-label">График</div>
+  </button>
+  <button class="tab" data-screen="profile" onclick="switchTab('profile')">
+    <div class="tab-icon">
+      <svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+    </div>
+    <div class="tab-label">Профиль</div>
   </button>
 </div>
 
@@ -1349,6 +1454,23 @@ const PHOTO_BASE = 'photos/';
 
 // Папка с иконками категорий (PNG) в репозитории
 const ICON_BASE = 'icons/';
+
+// ============ ПРОФИЛЬ (пока вручную, потом из БД) ============
+// Имя сотрудника — показывается в профиле
+const PROFILE_NAME = 'Арина';
+// Аватарка: ссылка на фото. Можно:
+//   - имя файла в папке photos/ (например 'avatar_arina.jpg')
+//   - полную ссылку https://...
+//   - оставить пустым '' — тогда покажется первая буква имени
+const PROFILE_AVATAR = '';
+// Задачи на смену (пример; потом будет ставить менеджер)
+const SHIFT_TASKS = [
+  'Вакуумировать заготовки',
+  'Подготовить микс-киты',
+  'Провести инвентаризацию',
+];
+// Ставка за смену (должна совпадать с SHIFT_RATE в Code.gs)
+const SHIFT_RATE = 5600;
 
 // Универсальный вызов API. Все запросы — GET с параметрами.
 // Большие payload'ы передаём как JSON-строку в параметре payload.
@@ -1495,6 +1617,9 @@ function switchTab(screen) {
       document.getElementById('screen-schedule').classList.add('active');
       renderMeRow();
       loadSchedule();
+    } else if (screen === 'profile') {
+      document.getElementById('screen-profile').classList.add('active');
+      renderProfile();
     }
 
     document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
@@ -2424,6 +2549,69 @@ function roundSmart(n) {
 }
 
 // ============ ГРАФИК ============
+// ============ ПРОФИЛЬ ============
+function renderProfile() {
+  // Имя и роль
+  document.getElementById('profile-name').textContent = PROFILE_NAME;
+
+  // Аватар: фото или первая буква имени
+  const av = document.getElementById('profile-avatar');
+  if (PROFILE_AVATAR && PROFILE_AVATAR.trim()) {
+    const src = /^https?:\/\//i.test(PROFILE_AVATAR) ? PROFILE_AVATAR : (PHOTO_BASE + PROFILE_AVATAR);
+    av.style.backgroundImage = 'url(\'' + src + '\')';
+    av.textContent = '';
+  } else {
+    av.style.backgroundImage = '';
+    av.textContent = (PROFILE_NAME || '?').charAt(0).toUpperCase();
+  }
+
+  // Зарплата ВСЕГДА за текущий месяц (не зависит от того, что открыто в графике).
+  // Грузим расписание текущего месяца отдельно.
+  const now = new Date();
+  const ym = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0');
+  document.getElementById('profile-salary').textContent = '…';
+  document.getElementById('profile-shifts').textContent = 'Считаю смены ' + PROFILE_NAME + '…';
+  api('getSchedule', { yearMonth: ym })
+    .then((data) => { renderProfileSalary(data || []); })
+    .catch(() => { renderProfileSalary([]); });
+
+  // Задачи на смену
+  const tasksEl = document.getElementById('profile-tasks');
+  tasksEl.innerHTML = SHIFT_TASKS.map((t, i) =>
+    '<div class="task-row" data-i="' + i + '">' +
+      '<div class="task-check"><svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" fill="#000"/></svg></div>' +
+      '<div class="task-text">' + escapeHtml(t) + '</div>' +
+    '</div>'
+  ).join('');
+  tasksEl.querySelectorAll('.task-row').forEach(row => {
+    row.addEventListener('click', () => {
+      if (row.classList.contains('done')) row.classList.remove('done');
+      else row.classList.add('done');
+    });
+  });
+}
+
+function renderProfileSalary(schedule) {
+  // Считаем смены именно этого сотрудника (PROFILE_NAME), без учёта регистра/пробелов
+  const target = (PROFILE_NAME || '').trim().toLowerCase();
+  const mine = (schedule || []).filter(s =>
+    String(s.bartender || s.Bartender || '').trim().toLowerCase() === target
+  );
+  const dayCount = mine.filter(s => (s.shift || '').toLowerCase() === 'day').length;
+  const nightCount = mine.filter(s => (s.shift || '').toLowerCase() === 'night').length;
+  const total = mine.length;
+  const salary = total * SHIFT_RATE;
+
+  document.getElementById('profile-salary').textContent = salary.toLocaleString('ru-RU') + ' ₽';
+  if (total === 0) {
+    document.getElementById('profile-shifts').textContent = 'Смен в этом месяце пока нет';
+  } else {
+    const word = total === 1 ? 'смена' : (total < 5 ? 'смены' : 'смен');
+    let sub = total + ' ' + word + ' (' + dayCount + ' дн. · ' + nightCount + ' ноч.)';
+    document.getElementById('profile-shifts').textContent = sub;
+  }
+}
+
 function renderMeRow() {
   const row = document.getElementById('me-row');
   if (!row) return;
