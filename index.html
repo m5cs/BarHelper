@@ -251,6 +251,20 @@
     transition: opacity 0.15s;
   }
   .inv-bar:active { opacity: 0.65; }
+  .finish-inv-btn {
+    width: 100%;
+    background: var(--surface);
+    color: var(--tint);
+    border: none;
+    border-radius: 12px;
+    padding: 15px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    margin-bottom: 8px;
+    transition: opacity 0.15s;
+  }
+  .finish-inv-btn:active { opacity: 0.6; }
   .inv-bar-label {
     font-size: 12px;
     color: var(--label-2);
@@ -279,6 +293,8 @@
     border-radius: 12px;
     padding: 16px;
     margin-bottom: 12px;
+    scroll-margin-top: 70px;
+    scroll-margin-bottom: 320px;
   }
   .input-label {
     display: block;
@@ -1104,6 +1120,10 @@
       <svg class="inset-row-chevron" viewBox="0 0 7 12"><path d="M1 1l5 5-5 5" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
     </div>
 
+    <button class="finish-inv-btn" id="finish-inv-btn" onclick="finishInventory()" style="display:none;">
+      Завершить инвентаризацию
+    </button>
+
     <div class="group-header">Кто проводит замер</div>
     <div class="chip-row" id="user-row"></div>
 
@@ -1161,7 +1181,6 @@
     </div>
 
     <div class="history" id="history-section" style="display: none;">
-      <div class="group-header">Замеры в этой инвентаризации</div>
       <div id="history-list"></div>
     </div>
   </div>
@@ -1556,10 +1575,12 @@ function finishLoad() {
 function renderInvBar() {
   const nameEl = document.getElementById('inv-bar-name');
   const countEl = document.getElementById('inv-bar-count');
+  const finishBtn = document.getElementById('finish-inv-btn');
   if (!state.activeInventory) {
     nameEl.textContent = 'Новая инвентаризация';
     nameEl.style.color = 'var(--green)';
     countEl.textContent = 'Сделай первый замер — лист создастся автоматически';
+    if (finishBtn) finishBtn.style.display = 'none';
     return;
   }
   nameEl.style.color = '';
@@ -1569,6 +1590,8 @@ function renderInvBar() {
     count === 0 ? 'Замеров пока нет' :
     count === 1 ? '1 замер' :
     count + ' ' + (count < 5 ? 'замера' : 'замеров');
+  // Кнопку завершения показываем только когда есть хотя бы один замер
+  if (finishBtn) finishBtn.style.display = count > 0 ? 'block' : 'none';
 }
 
 function formatInventoryName(name) {
@@ -1579,6 +1602,65 @@ function formatInventoryName(name) {
   let r = parseInt(m[3], 10) + ' ' + months[parseInt(m[2], 10) - 1] + ' ' + m[1];
   if (m[4]) r += ' #' + m[4];
   return r;
+}
+
+// Завершение инвентаризации — формирует бланк и отправляет менеджеру
+function finishInventory() {
+  if (!state.activeInventory || state.measurements.length === 0) {
+    alert('Нет замеров для формирования бланка');
+    return;
+  }
+  // Сводим одинаковые позиции в одну строку (суммируем итог по наименованию)
+  const summary = buildInventorySummary();
+  const lines = summary.map(s => '• ' + s.name + ': ' + s.total_ml + ' мл').join('\n');
+  const ok = confirm(
+    'Завершить инвентаризацию «' + formatInventoryName(state.activeInventory) + '»?\n\n' +
+    'Позиций: ' + summary.length + '\n' +
+    lines + '\n\n' +
+    'Бланк будет сформирован и отправлен менеджеру.'
+  );
+  if (!ok) return;
+
+  const btn = document.getElementById('finish-inv-btn');
+  btn.disabled = true;
+  const prev = btn.textContent;
+  btn.textContent = 'Формирую бланк...';
+
+  api('finishInventory', { name: state.activeInventory })
+    .then((res) => {
+      btn.disabled = false;
+      btn.textContent = prev;
+      if (res && res.sent) {
+        alert('✅ Бланк сформирован и отправлен менеджеру.');
+      } else if (res && res.link) {
+        alert('✅ Бланк сформирован.\nСсылка: ' + res.link);
+      } else {
+        alert('✅ Бланк сформирован.');
+      }
+    })
+    .catch((err) => {
+      btn.disabled = false;
+      btn.textContent = prev;
+      alert('Ошибка: ' + (err.message || err));
+    });
+}
+
+// Сводит замеры в позиции: одинаковые наименования суммируются
+function buildInventorySummary() {
+  const map = {};
+  state.measurements.forEach(m => {
+    const key = m.bottle_id || m.bottle_name;
+    if (!map[key]) {
+      map[key] = { name: m.bottle_name, total_ml: 0, full_count: 0 };
+    }
+    map[key].total_ml += (m.total_ml && m.total_ml > 0) ? m.total_ml : m.remaining_ml;
+    map[key].full_count += m.full_count || 0;
+  });
+  return Object.keys(map).map(k => ({
+    name: map[k].name,
+    total_ml: Math.round(map[k].total_ml),
+    full_count: map[k].full_count,
+  }));
 }
 
 document.getElementById('inv-bar').addEventListener('click', openInvModal);
@@ -1765,6 +1847,18 @@ document.getElementById('weight-input').addEventListener('input', (e) => {
 
 document.getElementById('full-input').addEventListener('input', () => {
   if (state.measureMode === 'full') calcFull();
+});
+
+// При фокусе на поле ввода — подматываем его наверх, чтобы клавиатура не перекрывала
+['weight-input', 'full-input', 'note-input'].forEach(id => {
+  const el = document.getElementById(id);
+  if (el) {
+    el.addEventListener('focus', () => {
+      setTimeout(() => {
+        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }, 300);
+    });
+  }
 });
 
 // Расчёт для открытой (взвешивание)
