@@ -622,6 +622,51 @@
     padding: 4px 16px;
   }
 
+  /* Фото подачи */
+  .recipe-photo-wrap {
+    border-radius: 12px;
+    overflow: hidden;
+    background: var(--surface);
+    line-height: 0;
+  }
+  .recipe-photo {
+    width: 100%;
+    height: auto;
+    display: block;
+    object-fit: cover;
+  }
+  .recipe-photo-error {
+    padding: 32px 16px;
+    text-align: center;
+    color: var(--label-2);
+    font-size: 14px;
+    line-height: 1.4;
+  }
+
+  /* КБЖУ */
+  .kbzhu-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+  }
+  .kbzhu-cell {
+    background: var(--surface);
+    border-radius: 12px;
+    padding: 14px 6px;
+    text-align: center;
+  }
+  .kbzhu-val {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--tint);
+    font-feature-settings: "tnum";
+  }
+  .kbzhu-lbl {
+    font-size: 11px;
+    color: var(--label-2);
+    margin-top: 4px;
+  }
+
   /* ============ SEGMENTED CONTROL (iOS) ============ */
   .segmented {
     background: var(--surface-2);
@@ -1202,6 +1247,15 @@
 // =====================================================================
 const API_URL = 'https://script.google.com/macros/s/AKfycbyHFeDtJhi-apq29wi_QiuPIn-q2MnGGZqPveP9slY6du1BULCZR0rL8Ap8EXoujqSi1Q/exec';
 
+// Базовая папка с фото подачи в репозитории GitHub.
+// Если в колонке Photo указано просто имя файла (negroni.jpg) — оно
+// будет искаться здесь. Если указана полная ссылка (https://...) —
+// используется она как есть.
+const PHOTO_BASE = 'photos/';
+
+// Папка с иконками категорий (PNG) в репозитории
+const ICON_BASE = 'icons/';
+
 // Универсальный вызов API. Все запросы — GET с параметрами.
 // Большие payload'ы передаём как JSON-строку в параметре payload.
 function api(action, params) {
@@ -1758,22 +1812,14 @@ function refreshRecipesInBackground() {
     .catch(() => {});
 }
 
-// Порядок и иконки категорий
+// Порядок, цвет подложки и файл иконки категории
 const CATEGORY_META = {
-  'Авторские коктейли':    { color: '#bf5af2', icon: 'star' },
-  'Классические коктейли': { color: '#0a84ff', icon: 'glass' },
-  'Чайные лимонады':       { color: '#30d158', icon: 'leaf' },
-  'Молочные коктейли':     { color: '#ff9f0a', icon: 'cup' },
-  'Авторские чаи':         { color: '#ff6482', icon: 'tea' },
-  'Полуфабрикаты':         { color: '#8e8e93', icon: 'flask' },
-};
-const CATEGORY_ICONS = {
-  star:  '<path d="M12 2l2.9 6.3 6.9.7-5.1 4.6 1.4 6.8L12 17.8 5.9 20.4l1.4-6.8L2.2 9l6.9-.7z"/>',
-  glass: '<path d="M5 3h14l-2 9a5 5 0 01-10 0L5 3zm7 13v3m-4 0h8" stroke="#fff" stroke-width="1.5" fill="none" stroke-linecap="round"/>',
-  leaf:  '<path d="M4 20C4 10 12 4 20 4c0 10-8 16-16 16zm0 0c2-6 6-9 10-11" stroke="#fff" stroke-width="1.5" fill="none" stroke-linecap="round"/>',
-  cup:   '<path d="M6 8h12v8a4 4 0 01-4 4h-4a4 4 0 01-4-4V8zm12 2h2a2 2 0 010 4h-2" stroke="#fff" stroke-width="1.5" fill="none"/>',
-  tea:   '<path d="M5 8h11v6a4 4 0 01-4 4H9a4 4 0 01-4-4V8zm11 2h2a2 2 0 010 4h-2M7 5c0-1 1-1 1-2M11 5c0-1 1-1 1-2" stroke="#fff" stroke-width="1.5" fill="none" stroke-linecap="round"/>',
-  flask: '<path d="M9 3h6M10 3v6l-5 9a2 2 0 002 3h10a2 2 0 002-3l-5-9V3" stroke="#fff" stroke-width="1.5" fill="none" stroke-linejoin="round"/>',
+  'Авторские коктейли':    { color: '#bf5af2', icon: 'avtorskie.png' },
+  'Классические коктейли': { color: '#0a84ff', icon: 'klassicheskie.png' },
+  'Чайные лимонады':       { color: '#30d158', icon: 'limonady.png' },
+  'Молочные коктейли':     { color: '#ff9f0a', icon: 'molochnye.png' },
+  'Авторские чаи':         { color: '#ff6482', icon: 'chai.png' },
+  'Полуфабрикаты':         { color: '#8e8e93', icon: 'polufabrikaty.png' },
 };
 
 function renderRecipesScreen() {
@@ -1805,14 +1851,18 @@ function renderCategoriesList() {
 
   const list = document.getElementById('recipes-list');
   list.innerHTML = cats.map(cat => {
-    const meta = CATEGORY_META[cat] || { color: '#8e8e93', icon: 'glass' };
+    const meta = CATEGORY_META[cat] || { color: '#8e8e93', icon: '' };
     const n = counts[cat];
     const word = n === 1 ? 'рецепт' : (n < 5 ? 'рецепта' : 'рецептов');
+    const iconImg = meta.icon
+      ? '<img src="' + ICON_BASE + meta.icon + '" alt="" style="width:24px;height:24px;object-fit:contain;" ' +
+        'onerror="this.style.display=\'none\'">'
+      : '';
     return `
       <div class="category-card" data-cat="${escapeHtml(cat)}">
         <div style="display:flex;align-items:center;flex:1;min-width:0;">
           <div class="category-icon" style="background:${meta.color}">
-            <svg viewBox="0 0 24 24">${CATEGORY_ICONS[meta.icon] || ''}</svg>
+            ${iconImg}
           </div>
           <div class="category-info">
             <div class="category-name">${escapeHtml(cat)}</div>
@@ -1929,7 +1979,28 @@ function renderRecipeSections() {
 
   const sections = []; // { key, title, html }
 
-  // 1. Состав
+  // 1. КБЖУ (значения-заглушки, заполнятся позже)
+  const kbzhuHtml =
+    '<div class="kbzhu-grid">' +
+    '<div class="kbzhu-cell"><div class="kbzhu-val">XXX</div><div class="kbzhu-lbl">ккал</div></div>' +
+    '<div class="kbzhu-cell"><div class="kbzhu-val">XXX</div><div class="kbzhu-lbl">белки, г</div></div>' +
+    '<div class="kbzhu-cell"><div class="kbzhu-val">XXX</div><div class="kbzhu-lbl">жиры, г</div></div>' +
+    '<div class="kbzhu-cell"><div class="kbzhu-val">XXX</div><div class="kbzhu-lbl">углеводы, г</div></div>' +
+    '</div>';
+  sections.push({ key: 'kbzhu', title: 'КБЖУ', html: kbzhuHtml });
+
+  // 2. Аллергены
+  const allergens = detectAllergens(r.ingredients);
+  let allergHtml;
+  if (allergens.length > 0) {
+    allergHtml = '<div class="allergen-chips">' +
+      allergens.map(a => '<span class="allergen-chip">' + escapeHtml(a) + '</span>').join('') + '</div>';
+  } else {
+    allergHtml = '<div class="allergen-none">Явных аллергенов не обнаружено</div>';
+  }
+  sections.push({ key: 'allerg', title: 'Аллергены', html: allergHtml });
+
+  // 3. Состав
   let ingrHtml;
   if (!r.ingredients || r.ingredients.length === 0) {
     ingrHtml = '<div class="ingredients-row"><div class="ing-name" style="color: var(--label-2)">Состав не указан</div></div>';
@@ -1943,7 +2014,7 @@ function renderRecipeSections() {
   }
   sections.push({ key: 'sostav', title: 'Состав', html: '<div class="inset-group">' + ingrHtml + '</div>' });
 
-  // 2. Этапы приготовления
+  // 4. Этапы приготовления
   if (r.steps && r.steps.length > 0) {
     const stepsHtml = r.steps.map(s => {
       const isWarn = s.step_num === 0;
@@ -1956,7 +2027,7 @@ function renderRecipeSections() {
     sections.push({ key: 'etapy', title: 'Этапы приготовления', html: '<div class="inset-group">' + stepsHtml + '</div>' });
   }
 
-  // 3. Подача (метод / бокал / гарниш)
+  // 5. Подача (метод / бокал / гарниш)
   const metaRows = [];
   if (r.method && r.method.trim()) metaRows.push(['Метод', r.method]);
   if (r.glass && r.glass.trim()) metaRows.push(['Бокал/лёд', r.glass]);
@@ -1969,22 +2040,23 @@ function renderRecipeSections() {
     sections.push({ key: 'podacha', title: 'Подача', html: '<div class="inset-group">' + metaHtml + '</div>' });
   }
 
-  // 4. Аллергены
-  const allergens = detectAllergens(r.ingredients);
-  let allergHtml;
-  if (allergens.length > 0) {
-    allergHtml = '<div class="allergen-chips">' +
-      allergens.map(a => '<span class="allergen-chip">' + escapeHtml(a) + '</span>').join('') + '</div>';
-  } else {
-    allergHtml = '<div class="allergen-none">Явных аллергенов не обнаружено</div>';
-  }
-  sections.push({ key: 'allerg', title: 'Аллергены', html: allergHtml });
-
-  // 5. Описание (если есть)
+  // 6. Описание (если есть)
   if (r.description && r.description.trim()) {
     sections.push({
       key: 'opisanie', title: 'Описание',
       html: '<div class="recipe-description" style="margin-bottom:0">' + escapeHtml(r.description) + '</div>'
+    });
+  }
+
+  // 7. Фото подачи (если есть)
+  if (r.photo && r.photo.trim()) {
+    const src = /^https?:\/\//i.test(r.photo) ? r.photo : (PHOTO_BASE + r.photo);
+    sections.push({
+      key: 'foto', title: 'Фото подачи',
+      html: '<div class="recipe-photo-wrap">' +
+            '<img class="recipe-photo" src="' + escapeHtml(src) + '" alt="Фото подачи" ' +
+            'loading="lazy" onerror="this.parentNode.innerHTML=\'<div class=&quot;recipe-photo-error&quot;>Фото не загрузилось</div>\'">' +
+            '</div>'
     });
   }
 
