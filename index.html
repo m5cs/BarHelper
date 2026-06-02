@@ -1111,16 +1111,28 @@
     <div id="bottle-list"></div>
 
     <div id="weight-section" style="display: none;">
-      <div class="input-section">
-        <label class="input-label">Вес открытой бутылки, граммы</label>
-        <input type="number" id="weight-input" class="weight-input"
-               placeholder="0" inputmode="decimal" />
+      <!-- Переключатель режима -->
+      <div class="segmented" id="measure-mode" style="margin-bottom: 16px;">
+        <div class="segmented-option active" data-mode="open">Открытая</div>
+        <div class="segmented-option" data-mode="full">Полная</div>
       </div>
 
-      <div class="input-section">
-        <label class="input-label">Запечатанных бутылок, шт</label>
-        <input type="number" id="sealed-input" class="weight-input"
-               placeholder="0" inputmode="numeric" value="0" />
+      <!-- Режим: открытая (взвешивание) -->
+      <div id="mode-open">
+        <div class="input-section">
+          <label class="input-label">Вес открытой бутылки, граммы</label>
+          <input type="number" id="weight-input" class="weight-input"
+                 placeholder="0" inputmode="decimal" />
+        </div>
+      </div>
+
+      <!-- Режим: полная (количество) -->
+      <div id="mode-full" style="display: none;">
+        <div class="input-section">
+          <label class="input-label">Сколько полных бутылок, шт</label>
+          <input type="number" id="full-input" class="weight-input"
+                 placeholder="1" inputmode="numeric" value="1" />
+        </div>
       </div>
 
       <div class="input-section">
@@ -1130,23 +1142,19 @@
       </div>
 
       <div id="result-card" class="result-card" style="display: none;">
-        <div class="result-row">
+        <div class="result-row" id="open-result-rows">
           <span class="result-label">Остаток открытой</span>
           <span class="result-value" id="result-ml">—</span>
         </div>
-        <div class="result-row">
+        <div class="result-row" id="pct-row">
           <span class="result-label">% от полной</span>
           <span class="result-value" id="result-pct">—</span>
         </div>
-        <div class="progress-bar">
+        <div class="progress-bar" id="progress-wrap">
           <div class="progress-fill" id="progress-fill" style="width: 0%"></div>
         </div>
-        <div class="result-row" id="sealed-row" style="display:none; margin-top: 10px;">
-          <span class="result-label">Запечатанные</span>
-          <span class="result-value" id="result-sealed">—</span>
-        </div>
         <div class="result-row total-row">
-          <span class="result-label">Итого</span>
+          <span class="result-label" id="total-label">Итого</span>
           <span class="result-value big" id="result-total">—</span>
         </div>
       </div>
@@ -1369,6 +1377,7 @@ const state = {
   activeInventory: null,
   measurements: [],
   lastCalc: null,
+  measureMode: 'open',
   currentScreen: 'schedule',
   currentRecipe: null,
   currentCategory: null,
@@ -1709,13 +1718,39 @@ function selectBottle(id) {
   });
   document.getElementById('weight-section').style.display = 'block';
   document.getElementById('weight-input').value = '';
-  document.getElementById('sealed-input').value = '0';
+  document.getElementById('full-input').value = '1';
   document.getElementById('note-input').value = '';
   document.getElementById('result-card').style.display = 'none';
   state.lastCalc = null;
+  setMeasureMode('open');
   setTimeout(() => document.getElementById('weight-input').focus(), 100);
   updateSaveButton();
 }
+
+// Переключение режима Открытая / Полная
+function setMeasureMode(mode) {
+  state.measureMode = mode;
+  const opts = document.querySelectorAll('#measure-mode .segmented-option');
+  opts.forEach(o => {
+    if (o.dataset.mode === mode) o.classList.add('active');
+    else o.classList.remove('active');
+  });
+  document.getElementById('mode-open').style.display = mode === 'open' ? 'block' : 'none';
+  document.getElementById('mode-full').style.display = mode === 'full' ? 'block' : 'none';
+  state.lastCalc = null;
+  document.getElementById('result-card').style.display = 'none';
+  if (mode === 'full') {
+    calcFull();
+  } else {
+    const w = parseFloat(document.getElementById('weight-input').value);
+    if (!isNaN(w) && w > 0) calcOpen(w);
+  }
+  updateSaveButton();
+}
+
+document.querySelectorAll('#measure-mode .segmented-option').forEach(opt => {
+  opt.addEventListener('click', () => setMeasureMode(opt.dataset.mode));
+});
 
 document.getElementById('weight-input').addEventListener('input', (e) => {
   const weight = parseFloat(e.target.value);
@@ -1725,15 +1760,15 @@ document.getElementById('weight-input').addEventListener('input', (e) => {
     updateSaveButton();
     return;
   }
-  calculate(weight);
+  calcOpen(weight);
 });
 
-// Пересчёт при изменении количества запечатанных
-document.getElementById('sealed-input').addEventListener('input', () => {
-  if (state.lastCalc) calculate(state.lastCalc.weight);
+document.getElementById('full-input').addEventListener('input', () => {
+  if (state.measureMode === 'full') calcFull();
 });
 
-function calculate(weight) {
+// Расчёт для открытой (взвешивание)
+function calcOpen(weight) {
   const b = state.selectedBottle;
   let remaining_ml;
   if (b.full_g && b.full_g > b.empty_g) {
@@ -1744,27 +1779,44 @@ function calculate(weight) {
   remaining_ml = Math.max(0, remaining_ml);
   const pct = (remaining_ml / b.volume_ml) * 100;
 
-  // Запечатанные
-  let sealed = parseInt(document.getElementById('sealed-input').value, 10);
-  if (isNaN(sealed) || sealed < 0) sealed = 0;
-  const sealedMl = sealed * b.volume_ml;
-  const totalMl = remaining_ml + sealedMl;
-
+  document.getElementById('open-result-rows').style.display = 'flex';
+  document.getElementById('pct-row').style.display = 'flex';
+  document.getElementById('progress-wrap').style.display = 'block';
   document.getElementById('result-ml').textContent = remaining_ml.toFixed(0) + ' мл';
   document.getElementById('result-pct').textContent = pct.toFixed(1) + '%';
   document.getElementById('progress-fill').style.width = Math.min(100, pct) + '%';
-
-  const sealedRow = document.getElementById('sealed-row');
-  if (sealed > 0) {
-    sealedRow.style.display = 'flex';
-    document.getElementById('result-sealed').textContent = sealed + ' шт · ' + sealedMl.toFixed(0) + ' мл';
-  } else {
-    sealedRow.style.display = 'none';
-  }
-  document.getElementById('result-total').textContent = totalMl.toFixed(0) + ' мл';
+  document.getElementById('total-label').textContent = 'Итого';
+  document.getElementById('result-total').textContent = remaining_ml.toFixed(0) + ' мл';
 
   document.getElementById('result-card').style.display = 'block';
-  state.lastCalc = { weight, remaining_ml, pct, sealed, total_ml: totalMl };
+  state.lastCalc = {
+    kind: 'open', weight: weight,
+    remaining_ml: remaining_ml, pct: pct,
+    full_count: 0, total_ml: remaining_ml,
+  };
+  updateSaveButton();
+}
+
+// Расчёт для полных (количество)
+function calcFull() {
+  const b = state.selectedBottle;
+  let count = parseInt(document.getElementById('full-input').value, 10);
+  if (isNaN(count) || count < 1) count = 0;
+  const totalMl = count * b.volume_ml;
+
+  // Прячем строки про остаток/процент — для полных они не нужны
+  document.getElementById('open-result-rows').style.display = 'none';
+  document.getElementById('pct-row').style.display = 'none';
+  document.getElementById('progress-wrap').style.display = 'none';
+  document.getElementById('total-label').textContent = count + ' полных × ' + b.volume_ml + ' мл';
+  document.getElementById('result-total').textContent = totalMl.toFixed(0) + ' мл';
+
+  document.getElementById('result-card').style.display = count > 0 ? 'block' : 'none';
+  state.lastCalc = count > 0 ? {
+    kind: 'full', weight: 0,
+    remaining_ml: 0, pct: 100,
+    full_count: count, total_ml: totalMl,
+  } : null;
   updateSaveButton();
 }
 
@@ -1784,18 +1836,21 @@ function save() {
   const btn = document.getElementById('save-btn');
   btn.disabled = true;
   btn.textContent = 'Сохраняю...';
+  const lc = state.lastCalc;
   const payload = {
     bartender: state.selectedBartender,
     bottle_id: state.selectedBottle.id,
     bottle_name: state.selectedBottle.name,
-    weight_g: state.lastCalc.weight,
-    remaining_ml: Math.round(state.lastCalc.remaining_ml),
-    remaining_pct: parseFloat(state.lastCalc.pct.toFixed(1)),
+    kind: lc.kind,
+    weight_g: lc.weight,
+    remaining_ml: Math.round(lc.remaining_ml),
+    remaining_pct: parseFloat(lc.pct.toFixed(1)),
     density: state.selectedBottle.density,
-    sealed_count: state.lastCalc.sealed || 0,
-    total_ml: Math.round(state.lastCalc.total_ml),
+    full_count: lc.full_count || 0,
+    total_ml: Math.round(lc.total_ml),
     note: (document.getElementById('note-input').value || '').trim(),
   };
+  const wasFirstMeasurement = !state.activeInventory || state.measurements.length === 0;
   api('saveMeasurement', { payload })
     .then(() => {
       showSavedBanner();
@@ -1806,8 +1861,10 @@ function save() {
       document.getElementById('save-wrap').classList.remove('show');
       btn.disabled = false;
       btn.textContent = 'Сохранить замер';
-      // Полностью перезагружаем данные — инвентаризация могла быть только что создана
-      loadInitialData();
+      // Если это первый замер (инвентаризация только создалась) — полная перезагрузка.
+      // Иначе обновляем только историю — это быстро, без тормозов.
+      if (wasFirstMeasurement) loadInitialData();
+      else reloadActiveInventoryData();
     })
     .catch((err) => {
       alert('Ошибка: ' + err.message);
@@ -1844,19 +1901,22 @@ function renderHistory() {
     return;
   }
   section.style.display = 'block';
-  list.innerHTML = state.measurements.slice(0, 30).map(m => {
+  let html = '<div class="group-header">Замеры в этой инвентаризации</div><div id="history-list-inner">';
+  html += state.measurements.slice(0, 50).map(m => {
     const d = new Date(m.timestamp);
     const time = String(d.getHours()).padStart(2,'0') + ':' + String(d.getMinutes()).padStart(2,'0');
-    // Итог: если total_ml не записан (старые замеры) — берём remaining_ml
     const total = m.total_ml && m.total_ml > 0 ? m.total_ml : m.remaining_ml;
+    const isFull = m.full_count && m.full_count > 0 && (!m.weight_g || m.weight_g === 0);
     let metaLine = escapeHtml(m.bartender) + ' · ' + time;
-    if (m.sealed_count > 0) metaLine += ' · +' + m.sealed_count + ' запеч.';
+    if (isFull) metaLine += ' · ' + m.full_count + ' полных';
     if (m.note) metaLine += ' · ' + escapeHtml(m.note);
     return '<div class="history-item">' +
            '<div><div class="history-name">' + escapeHtml(m.bottle_name) + '</div>' +
            '<div class="history-meta">' + metaLine + '</div></div>' +
            '<div class="history-data">' + total + ' мл</div></div>';
   }).join('');
+  html += '</div>';
+  list.innerHTML = html;
 }
 
 // ============ ТТК ============
