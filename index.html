@@ -2047,17 +2047,20 @@ function renderRecipeSections() {
     });
   }
 
-  // 7. Фото подачи (если есть)
+  // 7. Фото подачи — берём по ID рецепта (или из колонки Photo, если задана)
+  let photoSrc;
   if (r.photo && r.photo.trim()) {
-    const src = /^https?:\/\//i.test(r.photo) ? r.photo : (PHOTO_BASE + r.photo);
-    sections.push({
-      key: 'foto', title: 'Фото подачи',
-      html: '<div class="recipe-photo-wrap">' +
-            '<img class="recipe-photo" src="' + escapeHtml(src) + '" alt="Фото подачи" ' +
-            'loading="lazy" onerror="this.parentNode.innerHTML=\'<div class=&quot;recipe-photo-error&quot;>Фото не загрузилось</div>\'">' +
-            '</div>'
-    });
+    photoSrc = /^https?:\/\//i.test(r.photo) ? r.photo : (PHOTO_BASE + r.photo);
+  } else {
+    photoSrc = PHOTO_BASE + r.id + '.jpg';
   }
+  sections.push({
+    key: 'foto', title: 'Фото подачи',
+    html: '<div class="recipe-photo-wrap">' +
+          '<img class="recipe-photo" src="' + escapeHtml(photoSrc) + '" alt="Фото подачи" ' +
+          'loading="lazy" onerror="this.parentNode.innerHTML=\'<div class=&quot;recipe-photo-error&quot;>Фото ещё не добавлено</div>\'">' +
+          '</div>'
+  });
 
   // Якорная панель
   const anchorBar = document.getElementById('recipe-anchors');
