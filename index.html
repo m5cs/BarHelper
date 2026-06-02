@@ -669,6 +669,45 @@
     margin-top: 4px;
   }
 
+  /* Счётчик порций */
+  .portion-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: var(--surface);
+    border-radius: 12px;
+    padding: 10px 14px 10px 16px;
+    margin-bottom: 8px;
+  }
+  .portion-label { font-size: 16px; font-weight: 500; color: var(--label); }
+  .portion-stepper {
+    display: flex;
+    align-items: center;
+    background: var(--surface-2);
+    border-radius: 9px;
+    overflow: hidden;
+  }
+  .portion-btn {
+    width: 40px; height: 36px;
+    border: none;
+    background: transparent;
+    color: var(--tint);
+    font-size: 22px;
+    font-weight: 400;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    line-height: 1;
+  }
+  .portion-btn:active { background: rgba(255,255,255,0.08); }
+  .portion-count {
+    min-width: 40px;
+    text-align: center;
+    font-size: 17px;
+    font-weight: 600;
+    color: var(--label);
+    font-feature-settings: "tnum";
+  }
+
   /* ============ SEGMENTED CONTROL (iOS) ============ */
   .segmented {
     background: var(--surface-2);
@@ -1308,6 +1347,7 @@ const state = {
   currentRecipe: null,
   currentCategory: null,
   currentRecipeSize: 'small',
+  currentPortions: 1,
   scheduleMonth: new Date().getMonth(),
   scheduleYear: new Date().getFullYear(),
   scheduleData: [],
@@ -1949,6 +1989,7 @@ function openRecipe(id) {
   if (!recipe) return;
   state.currentRecipe = recipe;
   state.currentRecipeSize = 'small';
+  state.currentPortions = 1;
 
   document.getElementById('recipe-detail-title').textContent = recipe.name;
   document.getElementById('recipe-back-label').textContent = recipe.category || 'Назад';
@@ -2013,19 +2054,42 @@ function renderRecipeSections() {
   }
   sections.push({ key: 'allerg', title: 'Аллергены', html: allergHtml });
 
-  // 3. Состав
+  // 3. Состав (+ калькулятор порций для коктейлей; чаи со стакан/чайник пропускаем)
+  const hasTwoSizes = r.large_volume > 0;
+  const showPortions = !hasTwoSizes; // у чаёв свой переключатель объёма — порции не нужны
+  const portions = showPortions ? (state.currentPortions || 1) : 1;
+
   let ingrHtml;
   if (!r.ingredients || r.ingredients.length === 0) {
     ingrHtml = '<div class="ingredients-row"><div class="ing-name" style="color: var(--label-2)">Состав не указан</div></div>';
   } else {
     ingrHtml = r.ingredients.map(ing => {
-      const amount = isSmall ? ing.amount_small : ing.amount_large;
+      const base = isSmall ? ing.amount_small : ing.amount_large;
+      const amount = roundSmart(base * portions);
       const unit = ing.unit ? ' ' + ing.unit : '';
       return '<div class="ingredients-row"><div class="ing-name">' + escapeHtml(ing.name) +
              '</div><div class="ing-amount">' + amount + unit + '</div></div>';
     }).join('');
   }
-  sections.push({ key: 'sostav', title: 'Состав', html: '<div class="inset-group">' + ingrHtml + '</div>' });
+
+  // Панель счётчика порций
+  let portionHtml = '';
+  if (showPortions) {
+    portionHtml =
+      '<div class="portion-bar">' +
+        '<div class="portion-label">Порций</div>' +
+        '<div class="portion-stepper">' +
+          '<button class="portion-btn" id="portion-minus">−</button>' +
+          '<div class="portion-count" id="portion-count">' + portions + '</div>' +
+          '<button class="portion-btn" id="portion-plus">+</button>' +
+        '</div>' +
+      '</div>';
+  }
+
+  sections.push({
+    key: 'sostav', title: 'Состав',
+    html: portionHtml + '<div class="inset-group">' + ingrHtml + '</div>'
+  });
 
   // 4. Этапы приготовления
   if (r.steps && r.steps.length > 0) {
@@ -2103,6 +2167,47 @@ function renderRecipeSections() {
       chip.classList.add('active');
     });
   });
+
+  // Кнопки счётчика порций
+  const minusBtn = document.getElementById('portion-minus');
+  const plusBtn = document.getElementById('portion-plus');
+  if (minusBtn && plusBtn) {
+    minusBtn.addEventListener('click', () => changePortions(-1));
+    plusBtn.addEventListener('click', () => changePortions(1));
+  }
+}
+
+// Изменение числа порций — перерисовывает только состав, без скачка экрана
+function changePortions(delta) {
+  let p = (state.currentPortions || 1) + delta;
+  if (p < 1) p = 1;
+  if (p > 99) p = 99;
+  if (p === state.currentPortions) return;
+  state.currentPortions = p;
+
+  // Обновляем счётчик
+  const countEl = document.getElementById('portion-count');
+  if (countEl) countEl.textContent = p;
+
+  // Перерисовываем только строки состава (не трогаем остальные секции и скролл)
+  const r = state.currentRecipe;
+  const isSmall = state.currentRecipeSize === 'small';
+  const sec = document.getElementById('sec-sostav');
+  if (!sec || !r.ingredients) return;
+  const group = sec.querySelector('.inset-group');
+  if (!group) return;
+  group.innerHTML = r.ingredients.map(ing => {
+    const base = isSmall ? ing.amount_small : ing.amount_large;
+    const amount = roundSmart(base * p);
+    const unit = ing.unit ? ' ' + ing.unit : '';
+    return '<div class="ingredients-row"><div class="ing-name">' + escapeHtml(ing.name) +
+           '</div><div class="ing-amount">' + amount + unit + '</div></div>';
+  }).join('');
+}
+
+// Аккуратное округление до 1 знака (целые покажутся без дроби автоматически)
+function roundSmart(n) {
+  return Math.round(n * 10) / 10;
 }
 
 // ============ ГРАФИК ============
