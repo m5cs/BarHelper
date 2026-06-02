@@ -1632,10 +1632,11 @@ function finishInventory() {
       btn.textContent = prev;
       if (res && res.sent) {
         alert('✅ Бланк сформирован и отправлен менеджеру.');
-      } else if (res && res.link) {
-        alert('✅ Бланк сформирован.\nСсылка: ' + res.link);
+      } else if (res && res.error) {
+        alert('⚠️ Бланк сформирован, но отправка не удалась:\n' + res.error +
+              '\n\nПроверь, что бот настроен и менеджер написал боту.');
       } else {
-        alert('✅ Бланк сформирован.');
+        alert('✅ Бланк сформирован (отправка менеджеру пока не настроена — нужен токен бота).');
       }
     })
     .catch((err) => {
