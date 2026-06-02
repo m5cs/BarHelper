@@ -1015,6 +1015,82 @@
   .task-text { font-size: 16px; flex: 1; }
   .task-row.done .task-text { color: var(--label-3); text-decoration: line-through; }
 
+  /* ============ ОБУЧЕНИЕ ============ */
+  .learn-card {
+    background: var(--surface);
+    border-radius: 14px;
+    padding: 18px;
+    margin-bottom: 10px;
+    cursor: pointer;
+    transition: opacity 0.15s;
+    position: relative;
+    overflow: hidden;
+  }
+  .learn-card:active { opacity: 0.7; }
+  .learn-card-title { font-size: 19px; font-weight: 700; margin-bottom: 4px; }
+  .learn-card-sub { font-size: 14px; color: var(--label-2); }
+  .learn-card-tag {
+    display: inline-block;
+    font-size: 11px; font-weight: 600;
+    color: var(--tint);
+    background: rgba(255,214,10,0.12);
+    padding: 3px 10px; border-radius: 100px;
+    margin-bottom: 10px;
+    text-transform: uppercase; letter-spacing: 0.3px;
+  }
+
+  /* Статья */
+  .article-hero {
+    background: linear-gradient(135deg, #3a2a1a, #1c1c1e);
+    border-radius: 16px;
+    padding: 28px 20px;
+    margin-bottom: 20px;
+  }
+  .article-hero h1 { font-size: 30px; font-weight: 800; margin: 0; }
+  .article-hero .sub { font-size: 14px; color: var(--label-2); margin-top: 6px; font-style: italic; }
+  .article-body { padding: 0 2px; }
+  .article-body h2 {
+    font-size: 20px; font-weight: 700;
+    margin: 26px 0 10px;
+    color: var(--tint);
+  }
+  .article-body h3 {
+    font-size: 16px; font-weight: 700;
+    margin: 18px 0 6px;
+  }
+  .article-body p {
+    font-size: 15px; line-height: 1.6;
+    color: var(--label); margin: 0 0 12px;
+  }
+  .article-body .lead {
+    font-size: 16px; line-height: 1.6;
+    color: var(--label-2);
+  }
+  .article-card {
+    background: var(--surface);
+    border-radius: 12px;
+    padding: 14px 16px;
+    margin-bottom: 8px;
+  }
+  .article-card .name { font-weight: 600; font-size: 15px; }
+  .article-card .desc { font-size: 14px; color: var(--label-2); line-height: 1.5; margin-top: 3px; }
+  .article-quote {
+    border-left: 3px solid var(--tint);
+    padding: 8px 0 8px 14px;
+    margin: 14px 0;
+    font-style: italic;
+    color: var(--label-2);
+    font-size: 15px;
+  }
+  .article-fact {
+    background: rgba(255,214,10,0.08);
+    border-radius: 12px;
+    padding: 14px 16px;
+    margin: 14px 0;
+    font-size: 14px; line-height: 1.55;
+  }
+  .article-fact b { color: var(--tint); }
+
   /* ============ DAY DETAIL MODAL (большие кнопки смен) ============ */
   .shift-card {
     background: var(--surface-2);
@@ -1365,11 +1441,34 @@
       <div class="profile-row-text">Пройти аттестацию</div>
       <svg class="inset-row-chevron" viewBox="0 0 7 12"><path d="M1 1l5 5-5 5" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
     </div>
-    <div class="profile-row" onclick="alert('Раздел в разработке')">
+    <div class="profile-row" onclick="openLearning()">
       <div class="profile-row-text">Обучающие материалы</div>
       <svg class="inset-row-chevron" viewBox="0 0 7 12"><path d="M1 1l5 5-5 5" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
     </div>
   </div>
+</div>
+
+<!-- ==================== ОБУЧЕНИЕ (список) ==================== -->
+<div id="screen-learning" class="screen">
+  <button class="nav-bar-back" onclick="switchTab('profile')">
+    <svg width="11" height="20" viewBox="0 0 11 20" style="margin-right: 4px;">
+      <path d="M9 1L1 10l8 9" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+    Профиль
+  </button>
+  <div class="nav-title"><h1>Обучение</h1></div>
+  <div id="learning-list"></div>
+</div>
+
+<!-- ==================== ОБУЧЕНИЕ (статья) ==================== -->
+<div id="screen-article" class="screen">
+  <button class="nav-bar-back" onclick="switchTab('learning')">
+    <svg width="11" height="20" viewBox="0 0 11 20" style="margin-right: 4px;">
+      <path d="M9 1L1 10l8 9" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+    Материалы
+  </button>
+  <div id="article-content"></div>
 </div>
 
 <!-- ==================== TAB BAR ==================== -->
@@ -1462,7 +1561,7 @@ const PROFILE_NAME = 'Арина';
 //   - имя файла в папке photos/ (например 'avatar_arina.jpg')
 //   - полную ссылку https://...
 //   - оставить пустым '' — тогда покажется первая буква имени
-const PROFILE_AVATAR = 'avatar_arina.jpg';
+const PROFILE_AVATAR = '';
 // Задачи на смену (пример; потом будет ставить менеджер)
 const SHIFT_TASKS = [
   'Вакуумировать заготовки',
@@ -1581,23 +1680,17 @@ function showApp() {
   document.getElementById('screen-pin').classList.remove('active');
   document.getElementById('tab-bar').classList.add('show');
 
-  // Сразу показываем экран графика со спиннером (без мелькания и двойного перехода).
-  state.currentScreen = 'schedule';
+  // Сразу показываем Профиль (стартовый экран).
+  state.currentScreen = 'profile';
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-  document.getElementById('screen-schedule').classList.add('active');
+  document.getElementById('screen-profile').classList.add('active');
   document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-  const schedTab = document.querySelector('.tab[data-screen="schedule"]');
-  if (schedTab) schedTab.classList.add('active');
-  // Спиннер графика на время загрузки
-  const schedLoading = document.getElementById('schedule-loading');
-  if (schedLoading) schedLoading.style.display = 'flex';
-  const calGrid = document.getElementById('calendar-grid');
-  if (calGrid) calGrid.innerHTML = '';
+  const profTab = document.querySelector('.tab[data-screen="profile"]');
+  if (profTab) profTab.classList.add('active');
 
-  // Грузим данные. Когда придут — график отрисуется один раз (данные предзагружены).
+  // Грузим данные в фоне, затем рисуем профиль.
   loadInitialData(() => {
-    renderMeRow();
-    loadSchedule();
+    renderProfile();
   });
 }
 
@@ -1620,10 +1713,17 @@ function switchTab(screen) {
     } else if (screen === 'profile') {
       document.getElementById('screen-profile').classList.add('active');
       renderProfile();
+    } else if (screen === 'learning') {
+      document.getElementById('screen-learning').classList.add('active');
+      renderLearningList();
+    } else if (screen === 'article') {
+      document.getElementById('screen-article').classList.add('active');
     }
 
     document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-    const activeTab = document.querySelector('.tab[data-screen="' + screen + '"]');
+    // learning и article — подэкраны профиля, держим активным таб «Профиль»
+    const tabScreen = (screen === 'learning' || screen === 'article') ? 'profile' : screen;
+    const activeTab = document.querySelector('.tab[data-screen="' + tabScreen + '"]');
     if (activeTab) activeTab.classList.add('active');
 
     if (screen !== 'inv') {
@@ -2611,6 +2711,99 @@ function renderProfileSalary(schedule) {
     document.getElementById('profile-shifts').textContent = sub;
   }
 }
+
+// ============ ОБУЧЕНИЕ ============
+function openLearning() {
+  switchTab('learning');
+}
+
+// Список обучающих материалов
+const LEARNING_MATERIALS = [
+  { id: 'brandy', tag: 'Крепкий алкоголь', title: 'Бренди', sub: 'История, виды, регламент и главные бренды' },
+];
+
+function renderLearningList() {
+  const list = document.getElementById('learning-list');
+  list.innerHTML = LEARNING_MATERIALS.map(m =>
+    '<div class="learn-card" onclick="openArticle(\'' + m.id + '\')">' +
+      '<div class="learn-card-tag">' + escapeHtml(m.tag) + '</div>' +
+      '<div class="learn-card-title">' + escapeHtml(m.title) + '</div>' +
+      '<div class="learn-card-sub">' + escapeHtml(m.sub) + '</div>' +
+    '</div>'
+  ).join('');
+}
+
+function openArticle(id) {
+  const el = document.getElementById('article-content');
+  el.innerHTML = ARTICLES[id] || '<p>Материал не найден</p>';
+  switchTab('article');
+  window.scrollTo({ top: 0 });
+}
+
+// Контент статей
+const ARTICLES = {
+  brandy:
+    '<div class="article-hero">' +
+      '<h1>Бренди</h1>' +
+      '<div class="sub">«brandewijn» (гол.) — пережжённое, перегнанное вино</div>' +
+    '</div>' +
+    '<div class="article-body">' +
+
+    '<p class="lead">Бренди — крепкий алкогольный напиток, получаемый из винограда, ягод или фруктовых выжимок путём брожения, перегонки и выдержки.</p>' +
+
+    '<h2>История</h2>' +
+    '<p>Происхождение бренди тесно связано с развитием перегонного винокурения. Концентрированные напитки знали ещё в античных Греции, Риме и Китае. Бренди в современном виде появился в XII веке и стал популярен в XIV.</p>' +
+    '<p>Само понятие возникло на рубеже XV–XVI веков. Голландские купцы, закупавшие соль в бассейне реки Шаранта, попутно вывозили местное вино — вкусное, но нестабильное. Чтобы сохранить его при перевозке и сократить число бочек, вино подвергали дистилляции. Продукт назвали <b>brandewijn</b> — «перегнанное вино». Слово трансформировалось в «бренди» и дало имя целому семейству напитков.</p>' +
+
+    '<div class="article-fact">' +
+      '<b>Почему «Napoleon»?</b> Употребление французских бренди резко выросло во время кампаний Наполеона I — это был основной напиток солдата. По другой версии, в Коньяке название пошло от Наполеона III: коньяк «дофиллоксерного периода» его правления назвали именем императора.' +
+    '</div>' +
+
+    '<h2>Классификация по способу производства</h2>' +
+
+    '<h3>1. Виноградный бренди</h3>' +
+    '<p>Перегонка забродившего виноградного сока.</p>' +
+    '<div class="article-card"><div class="name">Коньяк (Cognac)</div><div class="desc">Местность Коньяк, Франция</div></div>' +
+    '<div class="article-card"><div class="name">Арманьяк (Armagnac)</div><div class="desc">Местность Арманьяк, Франция</div></div>' +
+    '<div class="article-card"><div class="name">Бренди де Херес (Brandy de Jerez)</div><div class="desc">Юг Испании, метод «солера», бочки из-под хереса</div></div>' +
+    '<div class="article-card"><div class="name">Армянский коньяк (Arbun)</div><div class="desc">Армения</div></div>' +
+    '<div class="article-card"><div class="name">Писко (Pisco)</div><div class="desc">Чили и Перу</div></div>' +
+    '<div class="article-card"><div class="name">Дивин (Divin)</div><div class="desc">Молдавия</div></div>' +
+    '<div class="article-card"><div class="name">Агуарденте (Aguardente)</div><div class="desc">Португалия, бочки из-под порто</div></div>' +
+
+    '<h3>2. Бренди из выжимок винограда</h3>' +
+    '<p>Из ферментированной мякоти, косточек и стеблей, оставшихся после отжима сока.</p>' +
+    '<div class="article-card"><div class="name">Граппа (Grappa)</div><div class="desc">Италия</div></div>' +
+    '<div class="article-card"><div class="name">Марк (Mark)</div><div class="desc">Франция</div></div>' +
+    '<div class="article-card"><div class="name">Чача (Chacha)</div><div class="desc">Кавказ: Грузия, Абхазия, юг России</div></div>' +
+
+    '<h3>3. Фруктовый бренди</h3>' +
+    '<p>Перегонка из фруктов и ягод, кроме винограда: яблоки, груши, сливы, вишня, малина и др.</p>' +
+    '<div class="article-card"><div class="name">Кальвадос (Calvados)</div><div class="desc">Яблочный, Нижняя Нормандия, Франция</div></div>' +
+    '<div class="article-card"><div class="name">Киршвассер (Kirschwasser)</div><div class="desc">Из чёрной черешни, Франция и Германия</div></div>' +
+    '<div class="article-card"><div class="name">Сливовица (Slivovice)</div><div class="desc">Сливовый, Словакия, Чехия, Венгрия</div></div>' +
+    '<div class="article-card"><div class="name">Пуар Вильямс (Poire Williams)</div><div class="desc">Грушевый, сорт Вильямс</div></div>' +
+    '<div class="article-card"><div class="name">Ракия</div><div class="desc">Балканы, 35–70%, двойная-тройная дистилляция фруктов</div></div>' +
+    '<div class="article-card"><div class="name">Шнапс (Schnaps)</div><div class="desc">Австро-немецкий фруктово-ягодный</div></div>' +
+
+    '<h2>Регламент (требования ЕС)</h2>' +
+    '<p>Чтобы напиток назывался виноградным бренди:</p>' +
+    '<div class="article-card"><div class="desc">• Изготовлен из перебродившего виноградного сока<br>• Выдержан не менее 6 месяцев<br>• Крепость не менее 36%<br>• Нельзя разбавлять ректификационным спиртом<br>• Краситель — только карамель или настой на дубовых стружках<br>• Нельзя ароматизировать (если это не часть технологии)</div></div>' +
+
+    '<h2>Известные бренды</h2>' +
+    '<div class="article-card"><div class="name">Metaxa</div><div class="desc">Основан Спиросом Метаксой в 1888 г. Вино из 3 сортов винограда выдерживают в лимузенском дубе и смешивают с мускатными винами Эгейских островов, добавляя вытяжку из лепестков розы.</div></div>' +
+    '<div class="article-card"><div class="name">St-Remy</div><div class="desc">Французский бренди дома Remy Martin, более 100 лет. Производство с 1886 г. Продаётся в 40+ странах. Известны купажи XO и Small Batch Reserve.</div></div>' +
+    '<div class="article-card"><div class="name">Sarajishvili</div><div class="desc">Премиум-бренди Грузии с 1887 г. Двойная дистилляция, выдержка в бочках из дуба Иберика не менее 3 лет.</div></div>' +
+    '<div class="article-card"><div class="name">Gran Duque d\'Alba</div><div class="desc">Испания, Williams &amp; Humbert (1877). Крупнейший в Европе винный погреб с системой «Солера».</div></div>' +
+    '<div class="article-card"><div class="name">Bardinet</div><div class="desc">Основан Полем Бардине в середине XIX века. В погребах одновременно выдерживается до 12 млн литров спиртов.</div></div>' +
+    '<div class="article-card"><div class="name">Cortel</div><div class="desc">Pascal Combeau (1838), регион Коньяк. Сейчас в составе Marie Brizard Group.</div></div>' +
+    '<div class="article-card"><div class="name">Paul Masson Grande Amber</div><div class="desc">Калифорния. История Пола Массона связана с виноделом Шарлем Лефраном.</div></div>' +
+    '<div class="article-card"><div class="name">Великая династия</div><div class="desc">Россия, на основе коньячных спиртов из региона Коньяк, выдержка в дубе не менее 3 лет.</div></div>' +
+
+    '<div class="article-quote">Бренди — это не конкретный напиток, а технология. Под одним словом скрывается целое семейство: от французского коньяка до грузинской чачи.</div>' +
+
+    '</div>',
+};
 
 function renderMeRow() {
   const row = document.getElementById('me-row');
