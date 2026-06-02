@@ -317,6 +317,12 @@
     border-bottom: 0.5px solid var(--separator);
   }
   .result-row:last-child { border-bottom: none; }
+  .result-row.total-row {
+    margin-top: 6px;
+    padding-top: 12px;
+    border-top: 1px solid var(--separator);
+    border-bottom: none;
+  }
   .result-label { font-size: 15px; color: var(--label-2); }
   .result-value {
     font-weight: 600;
@@ -1106,15 +1112,27 @@
 
     <div id="weight-section" style="display: none;">
       <div class="input-section">
-        <label class="input-label">Вес бутылки сейчас, граммы</label>
+        <label class="input-label">Вес открытой бутылки, граммы</label>
         <input type="number" id="weight-input" class="weight-input"
                placeholder="0" inputmode="decimal" />
       </div>
 
+      <div class="input-section">
+        <label class="input-label">Запечатанных бутылок, шт</label>
+        <input type="number" id="sealed-input" class="weight-input"
+               placeholder="0" inputmode="numeric" value="0" />
+      </div>
+
+      <div class="input-section">
+        <label class="input-label">Примечание (необязательно)</label>
+        <input type="text" id="note-input" class="weight-input"
+               placeholder="Например: пересорт, бой" />
+      </div>
+
       <div id="result-card" class="result-card" style="display: none;">
         <div class="result-row">
-          <span class="result-label">Остаток</span>
-          <span class="result-value big" id="result-ml">—</span>
+          <span class="result-label">Остаток открытой</span>
+          <span class="result-value" id="result-ml">—</span>
         </div>
         <div class="result-row">
           <span class="result-label">% от полной</span>
@@ -1122,6 +1140,14 @@
         </div>
         <div class="progress-bar">
           <div class="progress-fill" id="progress-fill" style="width: 0%"></div>
+        </div>
+        <div class="result-row" id="sealed-row" style="display:none; margin-top: 10px;">
+          <span class="result-label">Запечатанные</span>
+          <span class="result-value" id="result-sealed">—</span>
+        </div>
+        <div class="result-row total-row">
+          <span class="result-label">Итого</span>
+          <span class="result-value big" id="result-total">—</span>
         </div>
       </div>
     </div>
@@ -1683,6 +1709,8 @@ function selectBottle(id) {
   });
   document.getElementById('weight-section').style.display = 'block';
   document.getElementById('weight-input').value = '';
+  document.getElementById('sealed-input').value = '0';
+  document.getElementById('note-input').value = '';
   document.getElementById('result-card').style.display = 'none';
   state.lastCalc = null;
   setTimeout(() => document.getElementById('weight-input').focus(), 100);
@@ -1700,6 +1728,11 @@ document.getElementById('weight-input').addEventListener('input', (e) => {
   calculate(weight);
 });
 
+// Пересчёт при изменении количества запечатанных
+document.getElementById('sealed-input').addEventListener('input', () => {
+  if (state.lastCalc) calculate(state.lastCalc.weight);
+});
+
 function calculate(weight) {
   const b = state.selectedBottle;
   let remaining_ml;
@@ -1710,11 +1743,28 @@ function calculate(weight) {
   }
   remaining_ml = Math.max(0, remaining_ml);
   const pct = (remaining_ml / b.volume_ml) * 100;
+
+  // Запечатанные
+  let sealed = parseInt(document.getElementById('sealed-input').value, 10);
+  if (isNaN(sealed) || sealed < 0) sealed = 0;
+  const sealedMl = sealed * b.volume_ml;
+  const totalMl = remaining_ml + sealedMl;
+
   document.getElementById('result-ml').textContent = remaining_ml.toFixed(0) + ' мл';
   document.getElementById('result-pct').textContent = pct.toFixed(1) + '%';
   document.getElementById('progress-fill').style.width = Math.min(100, pct) + '%';
+
+  const sealedRow = document.getElementById('sealed-row');
+  if (sealed > 0) {
+    sealedRow.style.display = 'flex';
+    document.getElementById('result-sealed').textContent = sealed + ' шт · ' + sealedMl.toFixed(0) + ' мл';
+  } else {
+    sealedRow.style.display = 'none';
+  }
+  document.getElementById('result-total').textContent = totalMl.toFixed(0) + ' мл';
+
   document.getElementById('result-card').style.display = 'block';
-  state.lastCalc = { weight, remaining_ml, pct };
+  state.lastCalc = { weight, remaining_ml, pct, sealed, total_ml: totalMl };
   updateSaveButton();
 }
 
@@ -1742,6 +1792,9 @@ function save() {
     remaining_ml: Math.round(state.lastCalc.remaining_ml),
     remaining_pct: parseFloat(state.lastCalc.pct.toFixed(1)),
     density: state.selectedBottle.density,
+    sealed_count: state.lastCalc.sealed || 0,
+    total_ml: Math.round(state.lastCalc.total_ml),
+    note: (document.getElementById('note-input').value || '').trim(),
   };
   api('saveMeasurement', { payload })
     .then(() => {
@@ -1794,10 +1847,15 @@ function renderHistory() {
   list.innerHTML = state.measurements.slice(0, 30).map(m => {
     const d = new Date(m.timestamp);
     const time = String(d.getHours()).padStart(2,'0') + ':' + String(d.getMinutes()).padStart(2,'0');
+    // Итог: если total_ml не записан (старые замеры) — берём remaining_ml
+    const total = m.total_ml && m.total_ml > 0 ? m.total_ml : m.remaining_ml;
+    let metaLine = escapeHtml(m.bartender) + ' · ' + time;
+    if (m.sealed_count > 0) metaLine += ' · +' + m.sealed_count + ' запеч.';
+    if (m.note) metaLine += ' · ' + escapeHtml(m.note);
     return '<div class="history-item">' +
            '<div><div class="history-name">' + escapeHtml(m.bottle_name) + '</div>' +
-           '<div class="history-meta">' + escapeHtml(m.bartender) + ' · ' + time + '</div></div>' +
-           '<div class="history-data">' + m.remaining_ml + ' мл · ' + m.remaining_pct + '%</div></div>';
+           '<div class="history-meta">' + metaLine + '</div></div>' +
+           '<div class="history-data">' + total + ' мл</div></div>';
   }).join('');
 }
 
