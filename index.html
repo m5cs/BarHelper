@@ -335,6 +335,11 @@
     color: var(--ink);
     font-weight: 700;
   }
+  #me-row .chip.selected {
+    background: var(--card-accent);
+    border-color: var(--card-accent);
+    color: var(--card-accent-text);
+  }
 
   /* ============ INV BAR ============ */
   .inv-bar {
@@ -1089,16 +1094,16 @@
     padding: 10px 0 22px;
   }
   .profile-avatar {
-    width: 132px; height: 132px;
+    width: 144px; height: 144px;
     border-radius: 50%;
     background: linear-gradient(145deg,#EDEDED,#DADADA) center/cover no-repeat;
-    margin-bottom: 16px;
+    margin-bottom: 18px;
     display: flex; align-items: center; justify-content: center;
-    font-size: 50px; font-weight: 800; color: var(--gray);
+    font-size: 56px; font-weight: 800; color: var(--gray);
     overflow: hidden;
     border: 3px solid var(--lime);
   }
-  .profile-name { font-size: 28px; font-weight: 800; letter-spacing: -0.7px; }
+  .profile-name { font-size: 30px; font-weight: 800; letter-spacing: -0.8px; }
   .profile-status {
     display: flex; align-items: center; gap: 6px;
     font-size: 13px; font-weight: 600; color: var(--ink);
@@ -1107,25 +1112,35 @@
   .profile-status .pdot { width: 7px; height: 7px; border-radius: 50%; background: var(--lime); box-shadow: 0 0 0 2px rgba(199,255,46,0.25); }
   .profile-role { font-size: 13px; color: var(--gray); margin-top: 4px; font-weight: 400; }
 
-  .salary-group { background: var(--card-accent) !important; border-radius: 22px; }
-  .profile-salary { padding: 22px 18px; text-align: center; }
-  .salary-amount {
-    font-size: 36px; font-weight: 800; color: var(--lime);
-    letter-spacing: -0.5px;
-    font-feature-settings: "tnum";
-  }
-  .salary-sub { font-size: 13px; color: var(--card-accent-text-2); margin-top: 6px; font-weight: 400; }
+  /* Чёрная карточка-статистика (3 колонки) */
+  .salary-group { background: var(--card-accent) !important; border-radius: 24px; padding: 22px 18px; }
+  .stat-row { display: flex; align-items: center; justify-content: space-around; text-align: center; }
+  .stat-col { flex: 1; }
+  .stat-val { font-size: 19px; font-weight: 800; color: var(--card-accent-text); letter-spacing: -0.4px; font-feature-settings: "tnum"; }
+  .stat-val.ac { color: var(--lime); }
+  .stat-lbl { font-size: 9px; color: var(--card-accent-text-2); font-weight: 400; margin-top: 4px; text-transform: uppercase; letter-spacing: 0.4px; }
+  .stat-div { width: 1px; height: 38px; background: rgba(255,255,255,0.14); }
+  .stat-prog { height: 6px; background: rgba(255,255,255,0.15); border-radius: 100px; overflow: hidden; margin-top: 16px; }
+  .stat-prog > div { height: 100%; background: var(--lime); border-radius: 100px; transition: width 0.4s ease; }
+  .stat-prog-lbl { font-size: 11px; color: var(--card-accent-text-2); text-align: center; margin-top: 8px; font-weight: 400; }
 
   .profile-row {
-    display: flex; align-items: center; justify-content: space-between;
-    padding: 14px 16px;
+    display: flex; align-items: center; gap: 12px;
+    padding: 13px 16px;
     border-bottom: 0.5px solid var(--separator);
     cursor: pointer;
     transition: opacity 0.15s;
   }
   .profile-row:last-child { border-bottom: none; }
   .profile-row:active { opacity: 0.6; }
-  .profile-row-text { font-size: 16px; }
+  .profile-row-icon {
+    width: 34px; height: 34px; border-radius: 11px;
+    background: var(--card-accent); color: var(--card-accent-text);
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .profile-row-icon svg { width: 18px; height: 18px; }
+  .profile-row-text { font-size: 15px; font-weight: 500; flex: 1; }
 
   .task-row {
     display: flex; align-items: center; gap: 12px;
@@ -1143,12 +1158,13 @@
     transition: all 0.15s;
   }
   .task-row.done .task-check {
-    background: var(--green);
-    border-color: var(--green);
+    background: var(--card-accent);
+    border-color: var(--card-accent);
   }
   .task-check svg { width: 14px; height: 14px; opacity: 0; }
   .task-row.done .task-check svg { opacity: 1; }
-  .task-text { font-size: 16px; flex: 1; }
+  .task-row.done .task-check path { fill: var(--card-accent-text); }
+  .task-text { font-size: 15px; font-weight: 500; flex: 1; }
   .task-row.done .task-text { color: var(--label-3); text-decoration: line-through; }
 
   /* ============ ОБУЧЕНИЕ ============ */
@@ -1505,11 +1521,6 @@
 <div id="screen-schedule" class="screen">
   <div class="nav-title"><h1>График</h1></div>
 
-  <div class="me-selector">
-    <div class="me-selector-label">Я — это</div>
-    <div class="chip-row" id="me-row"></div>
-  </div>
-
   <div class="next-shift" id="next-shift" style="display:none;">
     <div class="next-shift-date">
       <div class="ns-day" id="ns-day">—</div>
@@ -1555,6 +1566,11 @@
     <div class="legend-item">↑ ночная · ↓ дневная</div>
   </div>
 
+  <div class="me-selector" style="margin-top:18px;">
+    <div class="me-selector-label">Кто работает</div>
+    <div class="chip-row" id="me-row"></div>
+  </div>
+
   <div id="schedule-loading" class="spinner-wrap" style="display: none;">
     <div class="spinner"></div>
     <div class="loading-text">Загружаю график...</div>
@@ -1573,13 +1589,17 @@
     <div class="profile-role" id="profile-role">Бармен</div>
   </div>
 
-  <!-- Зарплата -->
-  <div class="group-header">Зарплата за месяц</div>
+  <!-- Статистика и зарплата -->
   <div class="inset-group salary-group">
-    <div class="profile-salary">
-      <div class="salary-amount" id="profile-salary">—</div>
-      <div class="salary-sub" id="profile-shifts">—</div>
+    <div class="stat-row">
+      <div class="stat-col"><div class="stat-val" id="profile-shifts-count">—</div><div class="stat-lbl">Смен</div></div>
+      <div class="stat-div"></div>
+      <div class="stat-col"><div class="stat-val" id="profile-daynight">—</div><div class="stat-lbl">День·Ночь</div></div>
+      <div class="stat-div"></div>
+      <div class="stat-col"><div class="stat-val ac" id="profile-salary">—</div><div class="stat-lbl">Зарплата</div></div>
     </div>
+    <div class="stat-prog"><div id="profile-prog-fill" style="width:0%"></div></div>
+    <div class="stat-prog-lbl" id="profile-prog-lbl">Месячная норма</div>
   </div>
 
   <!-- Задачи на смену -->
@@ -1590,10 +1610,12 @@
   <div class="group-header">Обучение</div>
   <div class="inset-group">
     <div class="profile-row" onclick="alert('Раздел в разработке')">
+      <div class="profile-row-icon"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 3L1 9l4 2.18v6L12 21l7-3.82v-6l2-1.09V17h2V9L12 3zm6.82 6L12 12.72 5.18 9 12 5.28 18.82 9zM17 15.99l-5 2.73-5-2.73v-3.72L12 15l5-2.73v3.72z"/></svg></div>
       <div class="profile-row-text">Пройти аттестацию</div>
       <svg class="inset-row-chevron" viewBox="0 0 7 12"><path d="M1 1l5 5-5 5" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
     </div>
     <div class="profile-row" onclick="openLearning()">
+      <div class="profile-row-icon"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M18 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zM6 4h5v8l-2.5-1.5L6 12V4z"/></svg></div>
       <div class="profile-row-text">Обучающие материалы</div>
       <svg class="inset-row-chevron" viewBox="0 0 7 12"><path d="M1 1l5 5-5 5" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
     </div>
@@ -1722,6 +1744,8 @@ const SHIFT_TASKS = [
 ];
 // Ставка за смену (должна совпадать с SHIFT_RATE в Code.gs)
 const SHIFT_RATE = 5600;
+// Месячная норма смен (для прогресс-бара в профиле)
+const PROFILE_NORM_SHIFTS = 22;
 
 // Универсальный вызов API. Все запросы — GET с параметрами.
 // Большие payload'ы передаём как JSON-строку в параметре payload.
@@ -2804,7 +2828,7 @@ function roundSmart(n) {
 // ============ ПРОФИЛЬ ============
 function renderProfile() {
   // Имя и роль
-  document.getElementById('profile-name').textContent = PROFILE_NAME;
+  document.getElementById('profile-name').textContent = 'Привет, ' + PROFILE_NAME;
 
   // Аватар: фото или первая буква имени
   const av = document.getElementById('profile-avatar');
@@ -2822,7 +2846,8 @@ function renderProfile() {
   const now = new Date();
   const ym = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0');
   document.getElementById('profile-salary').textContent = '…';
-  document.getElementById('profile-shifts').textContent = 'Считаю смены ' + PROFILE_NAME + '…';
+  document.getElementById('profile-shifts-count').textContent = '…';
+  document.getElementById('profile-daynight').textContent = '…';
   api('getSchedule', { yearMonth: ym })
     .then((data) => { renderProfileSalary(data || []); })
     .catch(() => { renderProfileSalary([]); });
@@ -2854,14 +2879,13 @@ function renderProfileSalary(schedule) {
   const total = mine.length;
   const salary = total * SHIFT_RATE;
 
+  document.getElementById('profile-shifts-count').textContent = total;
+  document.getElementById('profile-daynight').textContent = dayCount + '·' + nightCount;
   document.getElementById('profile-salary').textContent = salary.toLocaleString('ru-RU') + ' ₽';
-  if (total === 0) {
-    document.getElementById('profile-shifts').textContent = 'Смен в этом месяце пока нет';
-  } else {
-    const word = total === 1 ? 'смена' : (total < 5 ? 'смены' : 'смен');
-    let sub = total + ' ' + word + ' (' + dayCount + ' дн. · ' + nightCount + ' ноч.)';
-    document.getElementById('profile-shifts').textContent = sub;
-  }
+
+  const pct = Math.min(100, Math.round(total / PROFILE_NORM_SHIFTS * 100));
+  document.getElementById('profile-prog-fill').style.width = pct + '%';
+  document.getElementById('profile-prog-lbl').textContent = 'Месячная норма · ' + pct + '%';
 }
 
 // ============ ОБУЧЕНИЕ ============
