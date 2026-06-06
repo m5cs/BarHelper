@@ -666,6 +666,11 @@
   }
 
   /* ============ КАТЕГОРИИ ТТК ============ */
+  /* Категории растягиваются на всю высоту до нижнего меню */
+  #screen-recipes.active { display: flex; flex-direction: column; min-height: calc(100vh - 90px - var(--safe-bottom)); }
+  #recipes-list.cats-fill { flex: 1 1 auto; display: flex; flex-direction: column; gap: 10px; }
+  #recipes-list.cats-fill .category-card { flex: 1 1 0; margin-bottom: 0; }
+
   .category-card {
     background: var(--surface);
     border-radius: 18px;
@@ -2510,6 +2515,7 @@ function renderRecipesScreen() {
 function renderCategoriesList() {
   document.getElementById('recipes-back').style.display = 'none';
   document.getElementById('recipes-title').textContent = 'ТТК';
+  document.getElementById('recipes-list').classList.add('cats-fill');
 
   // Группируем, сохраняя порядок из CATEGORY_META, затем прочие
   const counts = {};
@@ -2556,6 +2562,7 @@ function renderCategoriesList() {
 function renderCategoryRecipes(cat) {
   document.getElementById('recipes-back').style.display = 'flex';
   document.getElementById('recipes-title').textContent = cat;
+  document.getElementById('recipes-list').classList.remove('cats-fill');
 
   const recipes = state.recipes.filter(r => (r.category || 'Без категории') === cat);
   const list = document.getElementById('recipes-list');
