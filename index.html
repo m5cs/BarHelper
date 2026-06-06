@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="ru" class="theme-light">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
@@ -179,32 +179,43 @@
   .pin-input {
     width: 280px;
     background: var(--surface);
-    border: none;
+    border: 2px solid transparent;
     color: var(--label);
     font-size: 28px;
-    font-weight: 600;
+    font-weight: 700;
     text-align: center;
     letter-spacing: 14px;
     padding: 16px 12px 16px 26px;
-    border-radius: 14px;
+    border-radius: 16px;
     outline: none;
     font-feature-settings: "tnum";
     margin-bottom: 8px;
   }
-  .pin-input:focus { box-shadow: 0 0 0 2px var(--tint); }
+  .pin-input:focus { background: var(--bg); border-color: var(--ink); }
   .pin-error { color: var(--red); font-size: 14px; min-height: 22px; margin-bottom: 16px; }
   .pin-submit {
     width: 280px;
-    background: var(--tint); color: #000;
+    background: var(--tint); color: var(--black);
     border: none;
-    padding: 14px 24px;
-    border-radius: 12px;
-    font-size: 17px; font-weight: 600;
+    padding: 15px 24px;
+    border-radius: 16px;
+    font-size: 16px; font-weight: 700;
     cursor: pointer;
     transition: opacity 0.15s;
   }
   .pin-submit:active { opacity: 0.7; }
   .pin-submit:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  .pin-foot {
+    position: fixed;
+    bottom: calc(28px + var(--safe-bottom));
+    left: 0; right: 0;
+    text-align: center;
+    font-size: 12px;
+    color: var(--label-3);
+    font-weight: 500;
+    letter-spacing: 0.5px;
+  }
 
   /* ============ СПИННЕР ============ */
   .spinner-wrap {
@@ -236,9 +247,14 @@
   /* ============ INSET LIST (iOS Settings style) ============ */
   .inset-group {
     background: var(--surface);
-    border-radius: 10px;
+    border-radius: 16px;
     overflow: hidden;
-    margin-bottom: 24px;
+    margin-bottom: 22px;
+  }
+  .inset-group.accent {
+    background: var(--card-accent);
+    color: var(--card-accent-text);
+    border-radius: 22px;
   }
   .inset-row {
     display: flex; align-items: center;
@@ -262,12 +278,12 @@
   }
 
   .group-header {
-    font-size: 13px;
-    color: var(--label-2);
+    font-size: 11px;
+    color: var(--gray);
     text-transform: uppercase;
-    letter-spacing: 0.2px;
-    margin: 0 16px 6px;
-    font-weight: 400;
+    letter-spacing: 0.5px;
+    margin: 0 4px 8px;
+    font-weight: 500;
   }
   .group-footer {
     font-size: 13px;
@@ -279,17 +295,19 @@
   /* ============ КАРТОЧКИ (для бутылок) ============ */
   .card {
     background: var(--surface);
-    border-radius: 12px;
+    border-radius: 16px;
     padding: 14px 16px;
     margin-bottom: 8px;
     cursor: pointer;
     transition: opacity 0.15s;
     position: relative;
+    border: 2px solid transparent;
   }
   .card:active { opacity: 0.65; }
   .card.selected {
-    background: var(--tint-fill);
-    box-shadow: inset 0 0 0 1.5px var(--tint);
+    background: var(--bg);
+    border-color: var(--ink);
+    box-shadow: none;
   }
 
   /* ============ USER CHIPS ============ */
@@ -301,27 +319,28 @@
   }
   .chip {
     background: var(--surface);
-    color: var(--label);
-    padding: 8px 16px;
+    color: var(--gray);
+    padding: 9px 18px;
     border-radius: 100px;
-    font-size: 15px;
+    font-size: 14px;
     font-weight: 500;
     cursor: pointer;
     transition: opacity 0.15s;
   }
   .chip:active { opacity: 0.65; }
   .chip.selected {
-    background: var(--tint-fill);
-    color: var(--ink);
-    box-shadow: inset 0 0 0 1.5px var(--tint);
+    background: var(--card-accent);
+    color: var(--card-accent-text);
+    font-weight: 700;
   }
 
   /* ============ INV BAR ============ */
   .inv-bar {
-    background: var(--surface);
-    border-radius: 12px;
-    padding: 14px 16px;
-    margin-bottom: 16px;
+    background: var(--card-accent);
+    color: var(--card-accent-text);
+    border-radius: 22px;
+    padding: 16px 18px;
+    margin-bottom: 14px;
     cursor: pointer;
     display: flex;
     align-items: center;
@@ -329,35 +348,36 @@
     transition: opacity 0.15s;
   }
   .inv-bar:active { opacity: 0.65; }
+  .inv-bar .inset-row-chevron { color: rgba(255,255,255,0.4); }
   .finish-inv-btn {
     width: 100%;
-    background: var(--surface);
-    color: var(--ink);
+    background: var(--lime);
+    color: var(--black);
     border: none;
-    border-radius: 12px;
-    padding: 15px;
-    font-size: 16px;
-    font-weight: 600;
+    border-radius: 16px;
+    padding: 14px;
+    font-size: 15px;
+    font-weight: 700;
     cursor: pointer;
     margin-bottom: 8px;
     transition: opacity 0.15s;
   }
   .finish-inv-btn:active { opacity: 0.6; }
   .inv-bar-label {
-    font-size: 12px;
-    color: var(--label-2);
+    font-size: 10px;
+    color: var(--card-accent-text-2);
     text-transform: uppercase;
-    letter-spacing: 0.3px;
+    letter-spacing: 0.5px;
     margin-bottom: 2px;
   }
   .inv-bar-name {
-    font-weight: 600;
-    font-size: 17px;
-    color: var(--ink);
+    font-weight: 800;
+    font-size: 18px;
+    color: var(--card-accent-text);
   }
   .inv-bar-count {
-    font-size: 13px;
-    color: var(--label-2);
+    font-size: 12px;
+    color: var(--card-accent-text-2);
     margin-top: 2px;
   }
 
@@ -368,7 +388,7 @@
   /* ============ INPUT ============ */
   .input-section {
     background: var(--surface);
-    border-radius: 12px;
+    border-radius: 16px;
     padding: 16px;
     margin-bottom: 12px;
     scroll-margin-top: 70px;
@@ -376,11 +396,11 @@
   }
   .input-label {
     display: block;
-    font-size: 12px;
-    color: var(--label-2);
+    font-size: 10px;
+    color: var(--gray);
     margin-bottom: 8px;
     text-transform: uppercase;
-    letter-spacing: 0.3px;
+    letter-spacing: 0.4px;
   }
   .weight-input {
     width: 100%;
@@ -388,7 +408,7 @@
     border: none;
     color: var(--label);
     font-size: 36px;
-    font-weight: 700;
+    font-weight: 800;
     font-feature-settings: "tnum";
     outline: none;
     padding: 4px 0;
@@ -397,48 +417,50 @@
   .weight-input::placeholder { color: var(--label-3); }
 
   .result-card {
-    background: var(--surface);
-    border-radius: 12px;
-    padding: 16px;
+    background: var(--card-accent);
+    color: var(--card-accent-text);
+    border-radius: 16px;
+    padding: 16px 18px;
     margin-bottom: 16px;
-    box-shadow: inset 0 0 0 1px var(--tint-fill);
   }
   .result-row {
     display: flex;
     justify-content: space-between;
     align-items: baseline;
     padding: 8px 0;
-    border-bottom: 0.5px solid var(--separator);
+    border-bottom: 0.5px solid rgba(255,255,255,0.12);
   }
   .result-row:last-child { border-bottom: none; }
   .result-row.total-row {
     margin-top: 6px;
     padding-top: 12px;
-    border-top: 1px solid var(--separator);
+    border-top: 1px solid rgba(255,255,255,0.12);
     border-bottom: none;
   }
-  .result-label { font-size: 15px; color: var(--label-2); }
+  .result-label { font-size: 13px; color: var(--card-accent-text-2); }
   .result-value {
-    font-weight: 600;
+    font-weight: 700;
     font-size: 17px;
+    color: var(--card-accent-text);
     font-feature-settings: "tnum";
   }
   .result-value.big {
-    font-size: 32px;
-    color: var(--ink);
+    font-size: 30px;
+    font-weight: 800;
+    color: var(--lime);
   }
   .progress-bar {
     height: 6px;
-    background: var(--surface-2);
-    border-radius: 3px;
+    background: rgba(255,255,255,0.15);
+    border-radius: 100px;
     overflow: hidden;
     margin-top: 14px;
   }
   .progress-fill {
     height: 100%;
-    background: var(--tint);
+    background: var(--lime);
     transition: width 0.4s ease;
-    border-radius: 3px;
+    border-radius: 100px;
   }
 
   /* ============ SAVE BUTTON ============ */
@@ -465,7 +487,7 @@
     font-size: 17px;
     font-weight: 600;
     cursor: pointer;
-    box-shadow: 0 4px 16px rgba(212,175,55,0.3);
+    box-shadow: 0 4px 16px rgba(199,255,46,0.35);
     transition: opacity 0.15s;
   }
   .save-button:active { opacity: 0.7; }
@@ -523,26 +545,26 @@
     background: var(--surface);
     width: 100%;
     max-width: 600px;
-    border-top-left-radius: 14px;
-    border-top-right-radius: 14px;
-    padding: 8px 16px calc(20px + var(--safe-bottom)) 16px;
+    border-top-left-radius: 26px;
+    border-top-right-radius: 26px;
+    padding: 8px 18px calc(22px + var(--safe-bottom)) 18px;
     max-height: 88vh;
     overflow-y: auto;
     animation: slideUp 0.32s cubic-bezier(0.16, 1, 0.3, 1);
   }
   @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
   .modal-handle {
-    width: 36px; height: 5px;
+    width: 40px; height: 5px;
     background: var(--label-3);
-    border-radius: 3px;
+    border-radius: 100px;
     margin: 4px auto 16px;
   }
   .modal h3 {
-    font-size: 17px;
-    font-weight: 600;
+    font-size: 20px;
+    font-weight: 800;
     margin-bottom: 4px;
     text-align: center;
-    letter-spacing: -0.3px;
+    letter-spacing: -0.4px;
   }
   .modal-subtitle {
     color: var(--label-2);
@@ -554,10 +576,10 @@
   .modal-actions { display: flex; flex-direction: column; gap: 8px; }
   .modal-btn {
     width: 100%;
-    padding: 16px;
-    border-radius: 12px;
-    font-size: 17px;
-    font-weight: 600;
+    padding: 15px;
+    border-radius: 16px;
+    font-size: 16px;
+    font-weight: 700;
     border: none;
     cursor: pointer;
     transition: opacity 0.15s;
@@ -594,8 +616,8 @@
   /* ============ ТТК (СПИСОК) ============ */
   .recipe-card {
     background: var(--surface);
-    border-radius: 12px;
-    padding: 14px 16px;
+    border-radius: 16px;
+    padding: 15px 16px;
     margin-bottom: 8px;
     cursor: pointer;
     display: flex;
@@ -604,8 +626,8 @@
     transition: opacity 0.15s;
   }
   .recipe-card:active { opacity: 0.7; }
-  .recipe-name { font-weight: 600; font-size: 17px; }
-  .recipe-cat { font-size: 13px; color: var(--label-2); margin-top: 2px; }
+  .recipe-name { font-weight: 700; font-size: 16px; }
+  .recipe-cat { font-size: 13px; color: var(--gray); margin-top: 2px; font-weight: 400; }
 
   .recipe-description {
     font-size: 14px;
@@ -639,9 +661,9 @@
   /* ============ КАТЕГОРИИ ТТК ============ */
   .category-card {
     background: var(--surface);
-    border-radius: 12px;
+    border-radius: 18px;
     padding: 16px;
-    margin-bottom: 8px;
+    margin-bottom: 10px;
     cursor: pointer;
     display: flex;
     align-items: center;
@@ -650,18 +672,21 @@
   }
   .category-card:active { opacity: 0.7; }
   .category-icon {
-    width: 48px; height: 48px;
+    width: 50px; height: 50px;
+    border-radius: 14px;
+    background: var(--card-accent);
     display: flex; align-items: center; justify-content: center;
     margin-right: 14px;
     flex-shrink: 0;
+    overflow: hidden;
   }
   .category-icon img {
-    width: 48px; height: 48px;
+    width: 30px; height: 30px;
     object-fit: contain;
   }
   .category-info { flex: 1; min-width: 0; }
-  .category-name { font-weight: 600; font-size: 17px; }
-  .category-count { font-size: 13px; color: var(--label-2); margin-top: 2px; }
+  .category-name { font-weight: 700; font-size: 16px; }
+  .category-count { font-size: 13px; color: var(--gray); margin-top: 2px; font-weight: 400; }
 
   /* ============ ЯКОРНАЯ ПАНЕЛЬ (быстрый переход к секциям) ============ */
   .anchor-bar {
@@ -700,12 +725,12 @@
   /* Секции рецепта */
   .recipe-section { margin-bottom: 22px; scroll-margin-top: 56px; }
   .recipe-section-title {
-    font-size: 13px;
-    color: var(--label-2);
+    font-size: 11px;
+    color: var(--gray);
     text-transform: uppercase;
-    letter-spacing: 0.2px;
-    margin: 0 16px 6px;
-    font-weight: 600;
+    letter-spacing: 0.5px;
+    margin: 0 4px 8px;
+    font-weight: 500;
   }
 
   /* Аллергены */
@@ -775,35 +800,37 @@
     align-items: center;
     justify-content: space-between;
     background: var(--surface);
-    border-radius: 12px;
-    padding: 10px 14px 10px 16px;
+    border-radius: 16px;
+    padding: 12px 16px;
     margin-bottom: 8px;
   }
-  .portion-label { font-size: 16px; font-weight: 500; color: var(--label); }
+  .portion-label { font-size: 15px; font-weight: 700; color: var(--label); }
   .portion-stepper {
     display: flex;
     align-items: center;
-    background: var(--surface-2);
-    border-radius: 9px;
-    overflow: hidden;
+    gap: 14px;
+    background: transparent;
+    border-radius: 0;
+    overflow: visible;
   }
   .portion-btn {
-    width: 40px; height: 36px;
+    width: 34px; height: 34px;
     border: none;
-    background: transparent;
-    color: var(--ink);
-    font-size: 22px;
-    font-weight: 400;
+    border-radius: 50%;
+    background: var(--card-accent);
+    color: var(--card-accent-text);
+    font-size: 20px;
+    font-weight: 700;
     cursor: pointer;
     display: flex; align-items: center; justify-content: center;
     line-height: 1;
   }
-  .portion-btn:active { background: rgba(255,255,255,0.08); }
+  .portion-btn:active { opacity: 0.7; }
   .portion-count {
-    min-width: 40px;
+    min-width: 24px;
     text-align: center;
-    font-size: 17px;
-    font-weight: 600;
+    font-size: 18px;
+    font-weight: 800;
     color: var(--label);
     font-feature-settings: "tnum";
   }
@@ -811,11 +838,11 @@
   /* ============ SEGMENTED CONTROL (iOS) ============ */
   .segmented {
     background: var(--surface-2);
-    border-radius: 9px;
-    padding: 2px;
+    border-radius: 14px;
+    padding: 3px;
     display: flex;
     margin: 16px 0;
-    height: 32px;
+    height: 38px;
   }
   .segmented-option {
     flex: 1;
@@ -823,16 +850,17 @@
     padding: 4px 12px;
     font-size: 13px;
     font-weight: 500;
-    color: var(--label);
+    color: var(--gray);
     cursor: pointer;
-    border-radius: 7px;
+    border-radius: 11px;
     transition: all 0.2s;
     display: flex; align-items: center; justify-content: center;
   }
   .segmented-option.active {
-    background: var(--surface-4);
-    box-shadow: 0 3px 8px rgba(0,0,0,0.2);
-    font-weight: 600;
+    background: var(--lime);
+    color: var(--black);
+    box-shadow: none;
+    font-weight: 700;
   }
 
   /* ============ ТТК (ДЕТАЛИ) ============ */
@@ -874,10 +902,10 @@
     flex-shrink: 0;
     width: 26px; height: 26px;
     border-radius: 50%;
-    background: var(--tint);
-    color: #000;
+    background: var(--card-accent);
+    color: var(--card-accent-text);
     font-size: 13px;
-    font-weight: 700;
+    font-weight: 800;
     display: flex; align-items: center; justify-content: center;
     margin-top: 1px;
   }
@@ -914,22 +942,23 @@
   .month-nav-btn:active { opacity: 0.5; }
   .month-title {
     font-size: 22px;
-    font-weight: 700;
-    letter-spacing: -0.4px;
+    font-weight: 800;
+    letter-spacing: -0.6px;
   }
 
   /* "Я — это" */
   .me-selector {
     background: var(--surface);
-    border-radius: 12px;
+    border-radius: 16px;
     padding: 14px 16px;
     margin-bottom: 16px;
   }
   .me-selector-label {
-    font-size: 12px; color: var(--label-2);
+    font-size: 11px; color: var(--gray);
     text-transform: uppercase;
-    letter-spacing: 0.3px;
+    letter-spacing: 0.5px;
     margin-bottom: 10px;
+    font-weight: 500;
   }
   .me-selector .chip-row { margin-bottom: 0; }
 
@@ -962,7 +991,7 @@
   .day-cell {
     aspect-ratio: 1 / 1;
     background: var(--surface);
-    border-radius: 8px;
+    border-radius: 12px;
     cursor: pointer;
     display: flex;
     flex-direction: column;
@@ -981,8 +1010,8 @@
   }
   .day-cell.past { opacity: 0.45; }
   .day-cell.today {
-    background: var(--tint-fill);
-    box-shadow: inset 0 0 0 1.5px var(--tint);
+    background: var(--surface);
+    box-shadow: inset 0 0 0 2px var(--lime);
   }
   .day-cell.has-mine {
     background: var(--tint-fill);
@@ -1037,26 +1066,35 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    padding: 12px 0 24px;
+    padding: 10px 0 22px;
   }
   .profile-avatar {
-    width: 88px; height: 88px;
+    width: 132px; height: 132px;
     border-radius: 50%;
-    background: var(--surface-2) center/cover no-repeat;
-    margin-bottom: 14px;
+    background: linear-gradient(145deg,#EDEDED,#DADADA) center/cover no-repeat;
+    margin-bottom: 16px;
     display: flex; align-items: center; justify-content: center;
-    font-size: 34px; font-weight: 600; color: var(--label-2);
+    font-size: 50px; font-weight: 800; color: var(--gray);
     overflow: hidden;
+    border: 3px solid var(--lime);
   }
-  .profile-name { font-size: 24px; font-weight: 700; }
-  .profile-role { font-size: 14px; color: var(--label-2); margin-top: 2px; }
+  .profile-name { font-size: 28px; font-weight: 800; letter-spacing: -0.7px; }
+  .profile-status {
+    display: flex; align-items: center; gap: 6px;
+    font-size: 13px; font-weight: 600; color: var(--ink);
+    margin-top: 6px;
+  }
+  .profile-status .pdot { width: 7px; height: 7px; border-radius: 50%; background: var(--lime); box-shadow: 0 0 0 2px rgba(199,255,46,0.25); }
+  .profile-role { font-size: 13px; color: var(--gray); margin-top: 4px; font-weight: 400; }
 
-  .profile-salary { padding: 18px 16px; text-align: center; }
+  .salary-group { background: var(--card-accent) !important; border-radius: 22px; }
+  .profile-salary { padding: 22px 18px; text-align: center; }
   .salary-amount {
-    font-size: 34px; font-weight: 700; color: var(--green);
+    font-size: 36px; font-weight: 800; color: var(--lime);
+    letter-spacing: -0.5px;
     font-feature-settings: "tnum";
   }
-  .salary-sub { font-size: 14px; color: var(--label-2); margin-top: 4px; }
+  .salary-sub { font-size: 13px; color: var(--card-accent-text-2); margin-top: 6px; font-weight: 400; }
 
   .profile-row {
     display: flex; align-items: center; justify-content: space-between;
@@ -1185,7 +1223,7 @@
     opacity: 0.7;
   }
   .shift-card.disabled:active { opacity: 0.7; }
-  .shift-card.mine { border-color: var(--ink); }
+  .shift-card.mine { border-color: var(--lime); }
   .shift-card.mine.night { border-color: var(--blue); }
   .shift-card.empty { border-style: dashed; border-color: var(--label-3); }
 
@@ -1205,19 +1243,19 @@
   .shift-card.night .shift-card-title { color: var(--blue); }
 
   .shift-status {
-    font-size: 12px;
+    font-size: 11px;
     text-transform: uppercase;
-    letter-spacing: 0.3px;
+    letter-spacing: 0.4px;
     font-weight: 700;
-    padding: 3px 8px;
-    border-radius: 6px;
+    padding: 3px 9px;
+    border-radius: 100px;
   }
   .shift-status.mine {
-    background: var(--tint-fill);
-    color: var(--ink);
+    background: var(--lime);
+    color: var(--black);
   }
   .shift-status.mine.night {
-    background: rgba(10,132,255,0.18);
+    background: rgba(46,107,255,0.18);
     color: var(--blue);
   }
   .shift-status.other {
@@ -1225,8 +1263,8 @@
     color: var(--label-2);
   }
   .shift-status.empty {
-    background: rgba(48,209,88,0.18);
-    color: var(--green);
+    background: var(--tint-fill);
+    color: var(--ink);
   }
 
   .shift-card-body {
@@ -1313,6 +1351,7 @@
          class="pin-input" placeholder="••••" maxlength="10" autofocus />
   <div class="pin-error" id="pin-error"></div>
   <button class="pin-submit" id="pin-submit">Войти</button>
+  <div class="pin-foot">БАР ЖК HIDE</div>
 </div>
 
 <!-- ==================== ИНВЕНТАРИЗАЦИЯ ==================== -->
@@ -1497,12 +1536,13 @@
   <div class="profile-head">
     <div class="profile-avatar" id="profile-avatar"></div>
     <div class="profile-name" id="profile-name">—</div>
+    <div class="profile-status"><span class="pdot"></span>На смене</div>
     <div class="profile-role" id="profile-role">Бармен</div>
   </div>
 
   <!-- Зарплата -->
   <div class="group-header">Зарплата за месяц</div>
-  <div class="inset-group">
+  <div class="inset-group salary-group">
     <div class="profile-salary">
       <div class="salary-amount" id="profile-salary">—</div>
       <div class="salary-sub" id="profile-shifts">—</div>
@@ -1572,7 +1612,7 @@
   </button>
   <button class="tab" data-screen="inv" onclick="switchTab('inv')">
     <div class="tab-icon">
-      <svg viewBox="0 0 24 24"><path d="M3 13h2v8H3v-8zm4-5h2v13H7V8zm4-5h2v18h-2V3zm4 8h2v10h-2V11zm4-3h2v13h-2V8z"/></svg>
+      <svg viewBox="0 0 24 24"><path d="M9 2v2h1v3.3L8.4 10c-.26.4-.4.87-.4 1.35V20c0 .55.45 1 1 1h6c.55 0 1-.45 1-1v-8.65c0-.48-.14-.95-.4-1.35L14 7.3V4h1V2H9zm2 2h2v3.6l1.62 2.4H9.38L11 7.6V4z"/></svg>
     </div>
     <div class="tab-label">Инвентарь</div>
   </button>
