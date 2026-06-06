@@ -6,38 +6,106 @@
 <title>Bar Helper</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
-  /* ============ Pilo Design Tokens (светлая тема) ============ */
+  /* ============ Pilo Design Tokens (light, утверждено) ============ */
   :root {
-    /* Светлый фон, чёрно-бело-лаймовая палитра Pilo */
-    --bg: #FFFFFF;
-    --bg-grouped: #FFFFFF;
-    --surface: #F4F4F4;
+    /* базовые Pilo-токены */
+    --black:    #0F0F0F;   /* текст, чёрные карточки-акценты */
+    --white:    #FFFFFF;   /* фон */
+    --lime:     #C7FF2E;   /* ЛАЙМ — только заливки/активное/цифры на чёрном */
+    --charcoal: #2E2E2E;   /* тёмные вторичные поверхности */
+
+    /* фон/поверхности (свет) */
+    --bg: var(--white);
+    --bg-grouped: var(--white);
+    --surface: #F4F4F4;    /* светлые карточки-списки, неактивные плашки */
     --surface-2: #ECECEC;
     --surface-3: #E2E2E2;
     --surface-4: #D6D6D6;
 
-    --label: #0F0F0F;
-    --label-2: rgba(15,15,15,0.55);
-    --label-3: rgba(15,15,15,0.32);
-    --label-4: rgba(15,15,15,0.16);
+    /* текст */
+    --label: var(--black);
+    --label-2: rgba(0,0,0,0.55);
+    --label-3: rgba(0,0,0,0.32);
+    --label-4: rgba(0,0,0,0.15);
+    --ink: var(--black);   /* акцент-ТЕКСТ на светлом фоне (бывш. золотой текст) */
 
+    /* разделители */
     --separator: rgba(0,0,0,0.07);
-    --separator-opaque: #E4E4E4;
+    --separator-opaque: #E8E8E8;
 
-    /* Акценты Pilo */
-    --tint: #C7FF2E;            /* лаймовый акцент */
-    --tint-fill: rgba(199,255,46,0.18);
-    --ink: #0F0F0F;             /* чёрный — карточки-акценты, текст */
-    --blue: #0a84ff;
-    --green: #C7FF2E;           /* статусы/деньги — теперь лайм (был зелёный) */
-    --green-dot: #5BD63A;       /* живой зелёный для точки статуса "на смене" */
-    --red: #ff453a;
-    --orange: #ff9f0a;
-    --purple: #bf5af2;
-    --gray: #808080;
+    /* акценты */
+    --tint: var(--lime);             /* ЗАЛИВКИ: кнопки, активный круг, прогресс, кольца */
+    --tint-fill: rgba(199,255,46,0.20);
+    --blue: #2E6BFF;                 /* ночная смена (луна) */
+    --green: var(--lime);            /* статус «На смене», деньги — лайм (живёт на чёрном) */
+    --red: #E5484D;
+    --orange: #F5A623;               /* дневная смена (солнце) */
+    --purple: #8B5CF6;
+    --gray: #808080;                 /* вторичный текст/подписи */
+
+    /* инвертированные карточки-акценты (чёрная плашка) */
+    --card-accent: var(--black);     /* фон hero/статистики */
+    --card-accent-text: #FFFFFF;     /* текст на ней */
+    --card-accent-text-2: rgba(255,255,255,0.55);
 
     --safe-bottom: env(safe-area-inset-bottom, 0px);
     --safe-top: env(safe-area-inset-top, 0px);
+  }
+
+  /* ============ Pilo Dark theme ============ */
+  /* По умолчанию тема следует за устройством (prefers-color-scheme).      */
+  /* Принудительно: <html class="theme-dark"> или <html class="theme-light"> */
+  @media (prefers-color-scheme: dark) {
+    :root:not(.theme-light) {
+      --bg: #0F0F0F;
+      --bg-grouped: #0F0F0F;
+      --surface: #1C1C1E;            /* карточки-списки, неактивные плашки */
+      --surface-2: #2A2A2C;
+      --surface-3: #3A3A3C;
+      --surface-4: #48484A;
+      --label: #FFFFFF;
+      --label-2: rgba(255,255,255,0.60);
+      --label-3: rgba(255,255,255,0.35);
+      --label-4: rgba(255,255,255,0.18);
+      --ink: #FFFFFF;                /* акцент-текст на тёмном фоне → белый */
+      --separator: rgba(255,255,255,0.10);
+      --separator-opaque: #2A2A2C;
+      --tint: var(--lime);           /* лайм неизменен — заливки */
+      --tint-fill: rgba(199,255,46,0.16);
+      --green: var(--lime);          /* деньги/статус — лайм (на тёмном читается отлично) */
+      --blue: #5B8CFF;               /* ночная смена */
+      --red: #FF6B6B;
+      --orange: #F5A623;             /* дневная смена */
+      --gray: #8E8E93;
+      --card-accent: #232427;        /* hero чуть приподнят над фоном #0F0F0F */
+      --card-accent-text: #FFFFFF;
+      --card-accent-text-2: rgba(255,255,255,0.55);
+    }
+  }
+  :root.theme-dark {
+    --bg: #0F0F0F;
+    --bg-grouped: #0F0F0F;
+    --surface: #1C1C1E;
+    --surface-2: #2A2A2C;
+    --surface-3: #3A3A3C;
+    --surface-4: #48484A;
+    --label: #FFFFFF;
+    --label-2: rgba(255,255,255,0.60);
+    --label-3: rgba(255,255,255,0.35);
+    --label-4: rgba(255,255,255,0.18);
+    --ink: #FFFFFF;
+    --separator: rgba(255,255,255,0.10);
+    --separator-opaque: #2A2A2C;
+    --tint: var(--lime);
+    --tint-fill: rgba(199,255,46,0.16);
+    --green: var(--lime);
+    --blue: #5B8CFF;
+    --red: #FF6B6B;
+    --orange: #F5A623;
+    --gray: #8E8E93;
+    --card-accent: #232427;
+    --card-accent-text: #FFFFFF;
+    --card-accent-text-2: rgba(255,255,255,0.55);
   }
 
   * {
@@ -90,16 +158,17 @@
   }
   #screen-pin.active { display: flex; }
   .pin-logo {
-    width: 84px; height: 84px;
-    border-radius: 50%;
-    background: var(--tint);
+    width: 92px; height: 92px;
+    border-radius: 24px;
+    background: var(--black);
     display: flex; align-items: center; justify-content: center;
-    margin: 0 auto 20px;
+    overflow: hidden;
+    margin-bottom: 18px;
   }
-  .pin-logo svg { width: 46px; height: 46px; }
+  .pin-logo img { width: 100%; height: 100%; object-fit: contain; display: block; }
   .pin-title {
     font-size: 28px; font-weight: 800;
-    letter-spacing: -0.5px;
+    letter-spacing: -1px;
     margin-bottom: 8px;
   }
   .pin-sub {
@@ -110,32 +179,43 @@
   .pin-input {
     width: 280px;
     background: var(--surface);
-    border: 2px solid var(--ink);
+    border: 2px solid transparent;
     color: var(--label);
     font-size: 28px;
     font-weight: 700;
     text-align: center;
     letter-spacing: 14px;
     padding: 16px 12px 16px 26px;
-    border-radius: 18px;
+    border-radius: 16px;
     outline: none;
     font-feature-settings: "tnum";
     margin-bottom: 8px;
   }
-  .pin-input:focus { border-color: var(--tint); box-shadow: 0 0 0 3px var(--tint-fill); }
+  .pin-input:focus { background: var(--bg); border-color: var(--ink); }
   .pin-error { color: var(--red); font-size: 14px; min-height: 22px; margin-bottom: 16px; }
   .pin-submit {
     width: 280px;
-    background: var(--tint); color: #000;
+    background: var(--tint); color: var(--black);
     border: none;
-    padding: 16px 24px;
-    border-radius: 18px;
-    font-size: 17px; font-weight: 700;
+    padding: 15px 24px;
+    border-radius: 16px;
+    font-size: 16px; font-weight: 700;
     cursor: pointer;
     transition: opacity 0.15s;
   }
   .pin-submit:active { opacity: 0.7; }
   .pin-submit:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  .pin-foot {
+    position: fixed;
+    bottom: calc(28px + var(--safe-bottom));
+    left: 0; right: 0;
+    text-align: center;
+    font-size: 12px;
+    color: var(--label-3);
+    font-weight: 500;
+    letter-spacing: 0.5px;
+  }
 
   /* ============ СПИННЕР ============ */
   .spinner-wrap {
@@ -147,7 +227,7 @@
   .spinner {
     width: 28px; height: 28px;
     border: 2.5px solid var(--surface-2);
-    border-top-color: var(--tint);
+    border-top-color: var(--ink);
     border-radius: 50%;
     animation: spin 0.8s linear infinite;
   }
@@ -169,7 +249,12 @@
     background: var(--surface);
     border-radius: 16px;
     overflow: hidden;
-    margin-bottom: 24px;
+    margin-bottom: 22px;
+  }
+  .inset-group.accent {
+    background: var(--card-accent);
+    color: var(--card-accent-text);
+    border-radius: 22px;
   }
   .inset-row {
     display: flex; align-items: center;
@@ -193,12 +278,12 @@
   }
 
   .group-header {
-    font-size: 13px;
-    color: var(--label-2);
+    font-size: 11px;
+    color: var(--gray);
     text-transform: uppercase;
-    letter-spacing: 0.2px;
-    margin: 0 16px 6px;
-    font-weight: 400;
+    letter-spacing: 0.5px;
+    margin: 0 4px 8px;
+    font-weight: 500;
   }
   .group-footer {
     font-size: 13px;
@@ -210,17 +295,19 @@
   /* ============ КАРТОЧКИ (для бутылок) ============ */
   .card {
     background: var(--surface);
-    border-radius: 12px;
+    border-radius: 16px;
     padding: 14px 16px;
     margin-bottom: 8px;
     cursor: pointer;
     transition: opacity 0.15s;
     position: relative;
+    border: 2px solid transparent;
   }
   .card:active { opacity: 0.65; }
   .card.selected {
-    background: var(--tint-fill);
-    box-shadow: inset 0 0 0 1.5px var(--tint);
+    background: var(--bg);
+    border-color: var(--ink);
+    box-shadow: none;
   }
 
   /* ============ USER CHIPS ============ */
@@ -232,27 +319,30 @@
   }
   .chip {
     background: var(--surface);
-    color: var(--label);
-    padding: 8px 16px;
+    color: var(--gray);
+    padding: 9px 18px;
     border-radius: 100px;
-    font-size: 15px;
+    font-size: 14px;
     font-weight: 500;
     cursor: pointer;
     transition: opacity 0.15s;
+    border: 2px solid transparent;
   }
   .chip:active { opacity: 0.65; }
   .chip.selected {
-    background: var(--tint-fill);
-    color: var(--tint);
-    box-shadow: inset 0 0 0 1.5px var(--tint);
+    background: var(--surface);
+    border-color: var(--lime);
+    color: var(--ink);
+    font-weight: 700;
   }
 
   /* ============ INV BAR ============ */
   .inv-bar {
-    background: var(--ink);
+    background: var(--card-accent);
+    color: var(--card-accent-text);
     border-radius: 22px;
     padding: 16px 18px;
-    margin-bottom: 16px;
+    margin-bottom: 14px;
     cursor: pointer;
     display: flex;
     align-items: center;
@@ -260,14 +350,15 @@
     transition: opacity 0.15s;
   }
   .inv-bar:active { opacity: 0.65; }
+  .inv-bar .inset-row-chevron { color: rgba(255,255,255,0.4); }
   .finish-inv-btn {
     width: 100%;
-    background: var(--tint);
-    color: var(--ink);
+    background: var(--lime);
+    color: var(--black);
     border: none;
     border-radius: 16px;
-    padding: 15px;
-    font-size: 16px;
+    padding: 14px;
+    font-size: 15px;
     font-weight: 700;
     cursor: pointer;
     margin-bottom: 8px;
@@ -275,31 +366,31 @@
   }
   .finish-inv-btn:active { opacity: 0.6; }
   .inv-bar-label {
-    font-size: 11px;
-    color: rgba(255,255,255,0.5);
+    font-size: 10px;
+    color: var(--card-accent-text-2);
     text-transform: uppercase;
-    letter-spacing: 0.3px;
+    letter-spacing: 0.5px;
     margin-bottom: 2px;
   }
   .inv-bar-name {
     font-weight: 800;
-    font-size: 17px;
-    color: #fff;
+    font-size: 18px;
+    color: var(--card-accent-text);
   }
   .inv-bar-count {
-    font-size: 13px;
-    color: rgba(255,255,255,0.5);
+    font-size: 12px;
+    color: var(--card-accent-text-2);
     margin-top: 2px;
   }
 
   .bottle-name { font-weight: 600; font-size: 17px; margin-bottom: 4px; }
   .bottle-meta { font-size: 13px; color: var(--label-2); line-height: 1.35; }
-  .bottle-density { color: var(--tint); font-weight: 600; }
+  .bottle-density { color: var(--ink); font-weight: 600; }
 
   /* ============ INPUT ============ */
   .input-section {
     background: var(--surface);
-    border-radius: 12px;
+    border-radius: 16px;
     padding: 16px;
     margin-bottom: 12px;
     scroll-margin-top: 70px;
@@ -307,11 +398,11 @@
   }
   .input-label {
     display: block;
-    font-size: 12px;
-    color: var(--label-2);
+    font-size: 10px;
+    color: var(--gray);
     margin-bottom: 8px;
     text-transform: uppercase;
-    letter-spacing: 0.3px;
+    letter-spacing: 0.4px;
   }
   .weight-input {
     width: 100%;
@@ -319,7 +410,7 @@
     border: none;
     color: var(--label);
     font-size: 36px;
-    font-weight: 700;
+    font-weight: 800;
     font-feature-settings: "tnum";
     outline: none;
     padding: 4px 0;
@@ -328,48 +419,50 @@
   .weight-input::placeholder { color: var(--label-3); }
 
   .result-card {
-    background: var(--surface);
-    border-radius: 12px;
-    padding: 16px;
+    background: var(--card-accent);
+    color: var(--card-accent-text);
+    border-radius: 16px;
+    padding: 16px 18px;
     margin-bottom: 16px;
-    box-shadow: inset 0 0 0 1px var(--tint-fill);
   }
   .result-row {
     display: flex;
     justify-content: space-between;
     align-items: baseline;
     padding: 8px 0;
-    border-bottom: 0.5px solid var(--separator);
+    border-bottom: 0.5px solid rgba(255,255,255,0.12);
   }
   .result-row:last-child { border-bottom: none; }
   .result-row.total-row {
     margin-top: 6px;
     padding-top: 12px;
-    border-top: 1px solid var(--separator);
+    border-top: 1px solid rgba(255,255,255,0.12);
     border-bottom: none;
   }
-  .result-label { font-size: 15px; color: var(--label-2); }
+  .result-label { font-size: 13px; color: var(--card-accent-text-2); }
   .result-value {
-    font-weight: 600;
+    font-weight: 700;
     font-size: 17px;
+    color: var(--card-accent-text);
     font-feature-settings: "tnum";
   }
   .result-value.big {
-    font-size: 32px;
-    color: var(--tint);
+    font-size: 30px;
+    font-weight: 800;
+    color: var(--lime);
   }
   .progress-bar {
     height: 6px;
-    background: var(--surface-2);
-    border-radius: 3px;
+    background: rgba(255,255,255,0.15);
+    border-radius: 100px;
     overflow: hidden;
     margin-top: 14px;
   }
   .progress-fill {
     height: 100%;
-    background: var(--tint);
+    background: var(--lime);
     transition: width 0.4s ease;
-    border-radius: 3px;
+    border-radius: 100px;
   }
 
   /* ============ SAVE BUTTON ============ */
@@ -396,7 +489,7 @@
     font-size: 17px;
     font-weight: 600;
     cursor: pointer;
-    box-shadow: 0 4px 16px rgba(212,175,55,0.3);
+    box-shadow: 0 4px 16px rgba(199,255,46,0.35);
     transition: opacity 0.15s;
   }
   .save-button:active { opacity: 0.7; }
@@ -432,7 +525,7 @@
   }
   .history-name { font-weight: 500; font-size: 16px; }
   .history-data {
-    color: var(--tint);
+    color: var(--ink);
     font-feature-settings: "tnum";
     font-size: 14px;
     text-align: right;
@@ -454,26 +547,26 @@
     background: var(--surface);
     width: 100%;
     max-width: 600px;
-    border-top-left-radius: 14px;
-    border-top-right-radius: 14px;
-    padding: 8px 16px calc(20px + var(--safe-bottom)) 16px;
+    border-top-left-radius: 26px;
+    border-top-right-radius: 26px;
+    padding: 8px 18px calc(22px + var(--safe-bottom)) 18px;
     max-height: 88vh;
     overflow-y: auto;
     animation: slideUp 0.32s cubic-bezier(0.16, 1, 0.3, 1);
   }
   @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
   .modal-handle {
-    width: 36px; height: 5px;
+    width: 40px; height: 5px;
     background: var(--label-3);
-    border-radius: 3px;
+    border-radius: 100px;
     margin: 4px auto 16px;
   }
   .modal h3 {
-    font-size: 17px;
-    font-weight: 600;
+    font-size: 20px;
+    font-weight: 800;
     margin-bottom: 4px;
     text-align: center;
-    letter-spacing: -0.3px;
+    letter-spacing: -0.4px;
   }
   .modal-subtitle {
     color: var(--label-2);
@@ -485,10 +578,10 @@
   .modal-actions { display: flex; flex-direction: column; gap: 8px; }
   .modal-btn {
     width: 100%;
-    padding: 16px;
-    border-radius: 12px;
-    font-size: 17px;
-    font-weight: 600;
+    padding: 15px;
+    border-radius: 16px;
+    font-size: 16px;
+    font-weight: 700;
     border: none;
     cursor: pointer;
     transition: opacity 0.15s;
@@ -518,15 +611,15 @@
   .inv-item-name { font-weight: 600; font-size: 16px; }
   .inv-item-meta { font-size: 13px; color: var(--label-2); margin-top: 2px; }
   .inv-item-active-badge {
-    font-size: 11px; color: var(--tint);
+    font-size: 11px; color: var(--ink);
     text-transform: uppercase; letter-spacing: 0.4px; font-weight: 700;
   }
 
   /* ============ ТТК (СПИСОК) ============ */
   .recipe-card {
     background: var(--surface);
-    border-radius: 12px;
-    padding: 14px 16px;
+    border-radius: 16px;
+    padding: 15px 16px;
     margin-bottom: 8px;
     cursor: pointer;
     display: flex;
@@ -535,8 +628,8 @@
     transition: opacity 0.15s;
   }
   .recipe-card:active { opacity: 0.7; }
-  .recipe-name { font-weight: 600; font-size: 17px; }
-  .recipe-cat { font-size: 13px; color: var(--label-2); margin-top: 2px; }
+  .recipe-name { font-weight: 700; font-size: 16px; }
+  .recipe-cat { font-size: 13px; color: var(--gray); margin-top: 2px; font-weight: 400; }
 
   .recipe-description {
     font-size: 14px;
@@ -570,9 +663,9 @@
   /* ============ КАТЕГОРИИ ТТК ============ */
   .category-card {
     background: var(--surface);
-    border-radius: 12px;
+    border-radius: 18px;
     padding: 16px;
-    margin-bottom: 8px;
+    margin-bottom: 10px;
     cursor: pointer;
     display: flex;
     align-items: center;
@@ -581,18 +674,21 @@
   }
   .category-card:active { opacity: 0.7; }
   .category-icon {
-    width: 48px; height: 48px;
+    width: 50px; height: 50px;
+    border-radius: 14px;
+    background: var(--card-accent);
     display: flex; align-items: center; justify-content: center;
     margin-right: 14px;
     flex-shrink: 0;
+    overflow: hidden;
   }
   .category-icon img {
-    width: 48px; height: 48px;
+    width: 30px; height: 30px;
     object-fit: contain;
   }
   .category-info { flex: 1; min-width: 0; }
-  .category-name { font-weight: 600; font-size: 17px; }
-  .category-count { font-size: 13px; color: var(--label-2); margin-top: 2px; }
+  .category-name { font-weight: 700; font-size: 16px; }
+  .category-count { font-size: 13px; color: var(--gray); margin-top: 2px; font-weight: 400; }
 
   /* ============ ЯКОРНАЯ ПАНЕЛЬ (быстрый переход к секциям) ============ */
   .anchor-bar {
@@ -631,12 +727,12 @@
   /* Секции рецепта */
   .recipe-section { margin-bottom: 22px; scroll-margin-top: 56px; }
   .recipe-section-title {
-    font-size: 13px;
-    color: var(--label-2);
+    font-size: 11px;
+    color: var(--gray);
     text-transform: uppercase;
-    letter-spacing: 0.2px;
-    margin: 0 16px 6px;
-    font-weight: 600;
+    letter-spacing: 0.5px;
+    margin: 0 4px 8px;
+    font-weight: 500;
   }
 
   /* Аллергены */
@@ -691,7 +787,7 @@
   .kbzhu-val {
     font-size: 20px;
     font-weight: 700;
-    color: var(--tint);
+    color: var(--ink);
     font-feature-settings: "tnum";
   }
   .kbzhu-lbl {
@@ -706,35 +802,37 @@
     align-items: center;
     justify-content: space-between;
     background: var(--surface);
-    border-radius: 12px;
-    padding: 10px 14px 10px 16px;
+    border-radius: 16px;
+    padding: 12px 16px;
     margin-bottom: 8px;
   }
-  .portion-label { font-size: 16px; font-weight: 500; color: var(--label); }
+  .portion-label { font-size: 15px; font-weight: 700; color: var(--label); }
   .portion-stepper {
     display: flex;
     align-items: center;
-    background: var(--surface-2);
-    border-radius: 9px;
-    overflow: hidden;
+    gap: 14px;
+    background: transparent;
+    border-radius: 0;
+    overflow: visible;
   }
   .portion-btn {
-    width: 40px; height: 36px;
+    width: 34px; height: 34px;
     border: none;
-    background: transparent;
-    color: var(--tint);
-    font-size: 22px;
-    font-weight: 400;
+    border-radius: 50%;
+    background: var(--card-accent);
+    color: var(--card-accent-text);
+    font-size: 20px;
+    font-weight: 700;
     cursor: pointer;
     display: flex; align-items: center; justify-content: center;
     line-height: 1;
   }
-  .portion-btn:active { background: rgba(255,255,255,0.08); }
+  .portion-btn:active { opacity: 0.7; }
   .portion-count {
-    min-width: 40px;
+    min-width: 24px;
     text-align: center;
-    font-size: 17px;
-    font-weight: 600;
+    font-size: 18px;
+    font-weight: 800;
     color: var(--label);
     font-feature-settings: "tnum";
   }
@@ -742,11 +840,11 @@
   /* ============ SEGMENTED CONTROL (iOS) ============ */
   .segmented {
     background: var(--surface-2);
-    border-radius: 9px;
-    padding: 2px;
+    border-radius: 14px;
+    padding: 3px;
     display: flex;
     margin: 16px 0;
-    height: 32px;
+    height: 38px;
   }
   .segmented-option {
     flex: 1;
@@ -754,23 +852,24 @@
     padding: 4px 12px;
     font-size: 13px;
     font-weight: 500;
-    color: var(--label);
+    color: var(--gray);
     cursor: pointer;
-    border-radius: 7px;
+    border-radius: 11px;
     transition: all 0.2s;
     display: flex; align-items: center; justify-content: center;
   }
   .segmented-option.active {
-    background: var(--surface-4);
-    box-shadow: 0 3px 8px rgba(0,0,0,0.2);
-    font-weight: 600;
+    background: var(--lime);
+    color: var(--black);
+    box-shadow: none;
+    font-weight: 700;
   }
 
   /* ============ ТТК (ДЕТАЛИ) ============ */
   .nav-bar-back {
     display: flex; align-items: center;
     padding: 8px 0;
-    color: var(--tint);
+    color: var(--ink);
     font-size: 17px;
     cursor: pointer;
     transition: opacity 0.15s;
@@ -788,7 +887,7 @@
   .ing-amount {
     font-feature-settings: "tnum";
     font-size: 15px;
-    color: var(--tint);
+    color: var(--ink);
     font-weight: 600;
     white-space: nowrap;
   }
@@ -805,10 +904,10 @@
     flex-shrink: 0;
     width: 26px; height: 26px;
     border-radius: 50%;
-    background: var(--tint);
-    color: #000;
+    background: var(--card-accent);
+    color: var(--card-accent-text);
     font-size: 13px;
-    font-weight: 700;
+    font-weight: 800;
     display: flex; align-items: center; justify-content: center;
     margin-top: 1px;
   }
@@ -839,30 +938,49 @@
     border-radius: 50%;
     cursor: pointer;
     display: flex; align-items: center; justify-content: center;
-    color: var(--tint);
+    color: var(--ink);
     transition: opacity 0.15s;
   }
   .month-nav-btn:active { opacity: 0.5; }
   .month-title {
     font-size: 22px;
-    font-weight: 700;
-    letter-spacing: -0.4px;
+    font-weight: 800;
+    letter-spacing: -0.6px;
   }
 
   /* "Я — это" */
   .me-selector {
     background: var(--surface);
-    border-radius: 12px;
+    border-radius: 16px;
     padding: 14px 16px;
     margin-bottom: 16px;
   }
   .me-selector-label {
-    font-size: 12px; color: var(--label-2);
+    font-size: 11px; color: var(--gray);
     text-transform: uppercase;
-    letter-spacing: 0.3px;
+    letter-spacing: 0.5px;
     margin-bottom: 10px;
+    font-weight: 500;
   }
   .me-selector .chip-row { margin-bottom: 0; }
+
+  /* Карточка «Следующая смена» (чёрная, появляется при выборе имени) */
+  .next-shift {
+    display: flex; align-items: center; gap: 16px;
+    background: var(--card-accent);
+    color: var(--card-accent-text);
+    border-radius: 22px;
+    padding: 16px 18px;
+    margin-bottom: 16px;
+  }
+  .next-shift-date { text-align: center; min-width: 50px; }
+  .ns-day { font-size: 32px; font-weight: 800; line-height: 1; letter-spacing: -1px; }
+  .ns-mon { font-size: 11px; color: var(--card-accent-text-2); font-weight: 400; margin-top: 3px; }
+  .next-shift-div { width: 1px; height: 42px; background: rgba(255,255,255,0.15); }
+  .next-shift-info { flex: 1; }
+  .ns-lbl { font-size: 10px; color: var(--card-accent-text-2); text-transform: uppercase; letter-spacing: 0.5px; }
+  .ns-time { font-size: 17px; font-weight: 700; margin-top: 3px; }
+  .ns-who { font-size: 12px; font-weight: 600; color: var(--lime); margin-top: 2px; }
 
   /* Дни недели */
   .weekdays {
@@ -893,7 +1011,7 @@
   .day-cell {
     aspect-ratio: 1 / 1;
     background: var(--surface);
-    border-radius: 8px;
+    border-radius: 12px;
     cursor: pointer;
     display: flex;
     flex-direction: column;
@@ -912,8 +1030,7 @@
   }
   .day-cell.past { opacity: 0.45; }
   .day-cell.today {
-    background: var(--tint-fill);
-    box-shadow: inset 0 0 0 1.5px var(--tint);
+    background: var(--surface);
   }
   .day-cell.has-mine {
     background: var(--tint-fill);
@@ -926,26 +1043,27 @@
     margin-top: 2px;
     font-feature-settings: "tnum";
   }
-  .day-cell.today .day-num { color: var(--tint); }
+  .day-cell.today .day-num { color: #5C7A00; font-weight: 800; }
   .day-num.weekend { color: var(--red); }
-  .day-cell.today .day-num.weekend { color: var(--tint); }
+  .day-cell.today .day-num.weekend { color: #5C7A00; }
 
-  /* Точки-индикаторы внизу клетки */
+  /* Точки-индикаторы: ночь сверху, день снизу */
   .day-dots {
     display: flex;
+    flex-direction: column;
     gap: 3px;
     align-items: center;
-    height: 8px;
+    justify-content: center;
+    height: 16px;
     margin-bottom: 2px;
   }
   .dot {
     width: 6px; height: 6px;
     border-radius: 50%;
   }
-  .dot.day-mine { background: var(--tint); }
-  .dot.night-mine { background: var(--blue); }
-  .dot.day-other { background: var(--label-3); }
-  .dot.night-other { background: var(--label-3); }
+  .dot.mine { background: var(--ink); }
+  .dot.other { background: var(--label-3); }
+  .dot.empty { background: transparent; }
 
   /* Легенда */
   .legend {
@@ -968,28 +1086,35 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    padding: 12px 0 24px;
+    padding: 10px 0 22px;
   }
   .profile-avatar {
-    width: 130px; height: 130px;
+    width: 132px; height: 132px;
     border-radius: 50%;
-    background: var(--surface-2) center/cover no-repeat;
+    background: linear-gradient(145deg,#EDEDED,#DADADA) center/cover no-repeat;
     margin-bottom: 16px;
     display: flex; align-items: center; justify-content: center;
-    font-size: 48px; font-weight: 800; color: var(--label-2);
+    font-size: 50px; font-weight: 800; color: var(--gray);
     overflow: hidden;
-    border: 3px solid var(--tint);
+    border: 3px solid var(--lime);
   }
-  .profile-name { font-size: 26px; font-weight: 800; }
-  .profile-role { font-size: 14px; color: var(--label-2); margin-top: 4px; }
+  .profile-name { font-size: 28px; font-weight: 800; letter-spacing: -0.7px; }
+  .profile-status {
+    display: flex; align-items: center; gap: 6px;
+    font-size: 13px; font-weight: 600; color: var(--ink);
+    margin-top: 6px;
+  }
+  .profile-status .pdot { width: 7px; height: 7px; border-radius: 50%; background: var(--lime); box-shadow: 0 0 0 2px rgba(199,255,46,0.25); }
+  .profile-role { font-size: 13px; color: var(--gray); margin-top: 4px; font-weight: 400; }
 
-  .salary-card { background: var(--ink) !important; }
-  .salary-card .profile-salary { padding: 22px 16px; text-align: center; }
+  .salary-group { background: var(--card-accent) !important; border-radius: 22px; }
+  .profile-salary { padding: 22px 18px; text-align: center; }
   .salary-amount {
-    font-size: 36px; font-weight: 800; color: var(--tint);
+    font-size: 36px; font-weight: 800; color: var(--lime);
+    letter-spacing: -0.5px;
     font-feature-settings: "tnum";
   }
-  .salary-sub { font-size: 14px; color: rgba(255,255,255,0.55); margin-top: 4px; }
+  .salary-sub { font-size: 13px; color: var(--card-accent-text-2); margin-top: 6px; font-weight: 400; }
 
   .profile-row {
     display: flex; align-items: center; justify-content: space-between;
@@ -1043,7 +1168,7 @@
   .learn-card-tag {
     display: inline-block;
     font-size: 11px; font-weight: 600;
-    color: var(--tint);
+    color: var(--ink);
     background: rgba(255,214,10,0.12);
     padding: 3px 10px; border-radius: 100px;
     margin-bottom: 10px;
@@ -1052,18 +1177,18 @@
 
   /* Статья */
   .article-hero {
-    background: var(--ink);
-    border-radius: 22px;
+    background: var(--card-accent);
+    border-radius: 16px;
     padding: 28px 20px;
     margin-bottom: 20px;
   }
-  .article-hero h1 { font-size: 30px; font-weight: 800; margin: 0; color: #fff; }
-  .article-hero .sub { font-size: 14px; color: rgba(255,255,255,0.6); margin-top: 6px; font-style: italic; }
+  .article-hero h1 { font-size: 30px; font-weight: 800; margin: 0; color: var(--card-accent-text); }
+  .article-hero .sub { font-size: 14px; color: var(--card-accent-text-2); margin-top: 6px; font-style: italic; }
   .article-body { padding: 0 2px; }
   .article-body h2 {
     font-size: 20px; font-weight: 700;
     margin: 26px 0 10px;
-    color: var(--label);
+    color: var(--ink);
   }
   .article-body h3 {
     font-size: 16px; font-weight: 700;
@@ -1100,7 +1225,7 @@
     margin: 14px 0;
     font-size: 14px; line-height: 1.55;
   }
-  .article-fact b { color: var(--tint); }
+  .article-fact b { color: var(--ink); }
 
   /* ============ DAY DETAIL MODAL (большие кнопки смен) ============ */
   .shift-card {
@@ -1118,7 +1243,7 @@
     opacity: 0.7;
   }
   .shift-card.disabled:active { opacity: 0.7; }
-  .shift-card.mine { border-color: var(--tint); }
+  .shift-card.mine { border-color: var(--lime); }
   .shift-card.mine.night { border-color: var(--blue); }
   .shift-card.empty { border-style: dashed; border-color: var(--label-3); }
 
@@ -1134,23 +1259,23 @@
   .shift-icon {
     width: 22px; height: 22px;
   }
-  .shift-card.day .shift-card-title { color: var(--tint); }
+  .shift-card.day .shift-card-title { color: var(--ink); }
   .shift-card.night .shift-card-title { color: var(--blue); }
 
   .shift-status {
-    font-size: 12px;
+    font-size: 11px;
     text-transform: uppercase;
-    letter-spacing: 0.3px;
+    letter-spacing: 0.4px;
     font-weight: 700;
-    padding: 3px 8px;
-    border-radius: 6px;
+    padding: 3px 9px;
+    border-radius: 100px;
   }
   .shift-status.mine {
-    background: var(--tint-fill);
-    color: var(--tint);
+    background: var(--lime);
+    color: var(--black);
   }
   .shift-status.mine.night {
-    background: rgba(10,132,255,0.18);
+    background: rgba(46,107,255,0.18);
     color: var(--blue);
   }
   .shift-status.other {
@@ -1158,8 +1283,8 @@
     color: var(--label-2);
   }
   .shift-status.empty {
-    background: rgba(48,209,88,0.18);
-    color: var(--green);
+    background: var(--tint-fill);
+    color: var(--ink);
   }
 
   .shift-card-body {
@@ -1192,15 +1317,17 @@
   }
   .empty-state .sub { font-size: 14px; }
 
-  /* ============ TAB BAR (Pilo — круглое) ============ */
+  /* ============ TAB BAR (iOS) ============ */
+  /* ============ МЕНЮ — круглое (Pilo) ============ */
   .tab-bar {
     position: fixed;
     bottom: 0; left: 0; right: 0;
     background: var(--bg);
     border-top: 0.5px solid var(--separator);
     display: none;
-    justify-content: space-around;
+    justify-content: center;
     align-items: center;
+    gap: 14px;
     padding: 10px 12px calc(18px + var(--safe-bottom));
     z-index: 1000;
     max-width: 600px;
@@ -1209,29 +1336,27 @@
   .tab-bar.show { display: flex; }
   .tab {
     flex: 0 0 auto;
+    width: 48px; height: 48px;
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 52px; height: 52px;
     border-radius: 50%;
-    background: var(--surface);
     cursor: pointer;
     color: var(--gray);
-    transition: background 0.18s, color 0.18s;
+    background: var(--surface);
     border: none;
     font-family: inherit;
-    padding: 0;
+    transition: background 0.15s, color 0.15s;
   }
-  .tab.active { background: var(--tint); color: var(--ink); }
+  .tab.active { background: var(--lime); color: var(--black); }
   .tab-icon {
-    width: 24px; height: 24px;
+    width: 22px; height: 22px;
     display: flex; align-items: center; justify-content: center;
   }
   .tab-icon svg {
     width: 100%; height: 100%;
     fill: currentColor;
   }
-  /* Подписи в круглом меню скрыты (стиль Pilo) */
   .tab-label { display: none; }
 </style>
 </head>
@@ -1239,13 +1364,14 @@
 
 <!-- ==================== PIN ==================== -->
 <div id="screen-pin" class="screen active">
-  <div class="pin-logo"><svg viewBox="0 0 100 100" fill="none" stroke="#0F0F0F" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"><path d="M25 70 L25 42 A25 25 0 0 1 75 42 L75 70"/><line x1="18" y1="76" x2="82" y2="76"/><line x1="50" y1="30" x2="50" y2="22"/><line x1="42" y1="22" x2="58" y2="22"/><path d="M33 70 L33 48 L50 62 L67 48 L67 70" stroke-width="7"/></svg></div>
-  <div class="pin-title">Bar Helper</div>
+  <div class="pin-logo"><img src="data:image/png;base64,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" alt="Mise"></div>
+  <div class="pin-title">Mise</div>
   <div class="pin-sub">введи PIN-код</div>
   <input type="password" inputmode="numeric" id="pin-input"
          class="pin-input" placeholder="••••" maxlength="10" autofocus />
   <div class="pin-error" id="pin-error"></div>
   <button class="pin-submit" id="pin-submit">Войти</button>
+  <div class="pin-foot">БАР ЖК HIDE</div>
 </div>
 
 <!-- ==================== ИНВЕНТАРИЗАЦИЯ ==================== -->
@@ -1384,6 +1510,19 @@
     <div class="chip-row" id="me-row"></div>
   </div>
 
+  <div class="next-shift" id="next-shift" style="display:none;">
+    <div class="next-shift-date">
+      <div class="ns-day" id="ns-day">—</div>
+      <div class="ns-mon" id="ns-mon"></div>
+    </div>
+    <div class="next-shift-div"></div>
+    <div class="next-shift-info">
+      <div class="ns-lbl">Следующая смена</div>
+      <div class="ns-time" id="ns-time">—</div>
+      <div class="ns-who" id="ns-who"></div>
+    </div>
+  </div>
+
   <div class="month-nav">
     <button class="month-nav-btn" onclick="prevMonth()">
       <svg width="11" height="18" viewBox="0 0 11 18">
@@ -1411,9 +1550,9 @@
   <div class="calendar" id="calendar-grid"></div>
 
   <div class="legend">
-    <div class="legend-item"><span class="legend-dot" style="background: var(--tint)"></span>Моя дневная</div>
-    <div class="legend-item"><span class="legend-dot" style="background: var(--blue)"></span>Моя ночная</div>
+    <div class="legend-item"><span class="legend-dot" style="background: var(--ink)"></span>Моя смена</div>
     <div class="legend-item"><span class="legend-dot" style="background: var(--label-3)"></span>Чужая</div>
+    <div class="legend-item">↑ ночная · ↓ дневная</div>
   </div>
 
   <div id="schedule-loading" class="spinner-wrap" style="display: none;">
@@ -1430,12 +1569,13 @@
   <div class="profile-head">
     <div class="profile-avatar" id="profile-avatar"></div>
     <div class="profile-name" id="profile-name">—</div>
+    <div class="profile-status"><span class="pdot"></span>На смене</div>
     <div class="profile-role" id="profile-role">Бармен</div>
   </div>
 
   <!-- Зарплата -->
   <div class="group-header">Зарплата за месяц</div>
-  <div class="inset-group salary-card">
+  <div class="inset-group salary-group">
     <div class="profile-salary">
       <div class="salary-amount" id="profile-salary">—</div>
       <div class="salary-sub" id="profile-shifts">—</div>
@@ -2923,8 +3063,9 @@ function renderCalendar() {
     if (hasMine && !isToday) cellCls.push('has-mine');
 
     let dotsHtml = '';
-    if (dayB) dotsHtml += '<span class="dot ' + (dayB === me ? 'day-mine' : 'day-other') + '"></span>';
-    if (nightB) dotsHtml += '<span class="dot ' + (nightB === me ? 'night-mine' : 'night-other') + '"></span>';
+    // ночь — сверху, день — снизу; своя смена = чёрная точка, чужая = серая
+    dotsHtml += '<span class="dot ' + (nightB ? (nightB === me ? 'mine' : 'other') : 'empty') + '"></span>';
+    dotsHtml += '<span class="dot ' + (dayB ? (dayB === me ? 'mine' : 'other') : 'empty') + '"></span>';
 
     html += '<div class="' + cellCls.join(' ') + '" data-date="' + dateStr + '">' +
             '<div class="day-num' + (isWeekend ? ' weekend' : '') + '">' + day + '</div>' +
@@ -2936,6 +3077,32 @@ function renderCalendar() {
   grid.querySelectorAll('.day-cell:not(.empty)').forEach(cell => {
     cell.addEventListener('click', () => openDayModal(cell.dataset.date));
   });
+
+  renderNextShift();
+}
+
+function renderNextShift() {
+  const card = document.getElementById('next-shift');
+  if (!card) return;
+  const me = state.selectedBartender;
+  if (!me) { card.style.display = 'none'; return; }
+  const t = new Date();
+  const todayStr = t.getFullYear() + '-' + String(t.getMonth() + 1).padStart(2, '0') + '-' + String(t.getDate()).padStart(2, '0');
+  const mine = (state.scheduleData || [])
+    .filter(s => s.bartender === me && s.date >= todayStr)
+    .sort((a, b) => {
+      if (a.date !== b.date) return a.date < b.date ? -1 : 1;
+      return (a.shift === 'day' ? 0 : 1) - (b.shift === 'day' ? 0 : 1);
+    });
+  if (mine.length === 0) { card.style.display = 'none'; return; }
+  const next = mine[0];
+  const monGen = ['января','февраля','марта','апреля','мая','июня','июля','августа','сентября','октября','ноября','декабря'];
+  const parts = next.date.split('-').map(Number);
+  document.getElementById('ns-day').textContent = parts[2];
+  document.getElementById('ns-mon').textContent = monGen[parts[1] - 1];
+  document.getElementById('ns-time').textContent = next.shift === 'day' ? '08:00 — 20:00' : '20:00 — 08:00';
+  document.getElementById('ns-who').textContent = me;
+  card.style.display = 'flex';
 }
 
 // ============ DAY MODAL ============
