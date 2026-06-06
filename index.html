@@ -1656,17 +1656,11 @@
 
 <!-- ==================== TAB BAR ==================== -->
 <div class="tab-bar" id="tab-bar">
-  <button class="tab" data-screen="inv" onclick="switchTab('inv')">
+  <button class="tab" data-screen="profile" onclick="switchTab('profile')">
     <div class="tab-icon">
-      <svg viewBox="0 0 24 24"><path d="M3 13h2v8H3v-8zm4-5h2v13H7V8zm4-5h2v18h-2V3zm4 8h2v10h-2V11zm4-3h2v13h-2V8z"/></svg>
+      <svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
     </div>
-    <div class="tab-label">Инвентарь</div>
-  </button>
-  <button class="tab" data-screen="recipes" onclick="switchTab('recipes')">
-    <div class="tab-icon">
-      <svg viewBox="0 0 24 24"><path d="M19 2H5c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 18H5V4h2v6l2.5-1.5L12 10V4h7v16z"/></svg>
-    </div>
-    <div class="tab-label">ТТК</div>
+    <div class="tab-label">Профиль</div>
   </button>
   <button class="tab active" data-screen="schedule" onclick="switchTab('schedule')">
     <div class="tab-icon">
@@ -1674,11 +1668,17 @@
     </div>
     <div class="tab-label">График</div>
   </button>
-  <button class="tab" data-screen="profile" onclick="switchTab('profile')">
+  <button class="tab" data-screen="recipes" onclick="switchTab('recipes')">
     <div class="tab-icon">
-      <svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+      <svg viewBox="0 0 24 24"><path d="M19 2H5c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 18H5V4h2v6l2.5-1.5L12 10V4h7v16z"/></svg>
     </div>
-    <div class="tab-label">Профиль</div>
+    <div class="tab-label">ТТК</div>
+  </button>
+  <button class="tab" data-screen="inv" onclick="switchTab('inv')">
+    <div class="tab-icon">
+      <svg viewBox="0 0 24 24"><path d="M3 13h2v8H3v-8zm4-5h2v13H7V8zm4-5h2v18h-2V3zm4 8h2v10h-2V11zm4-3h2v13h-2V8z"/></svg>
+    </div>
+    <div class="tab-label">Инвентарь</div>
   </button>
 </div>
 
