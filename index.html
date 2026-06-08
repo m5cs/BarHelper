@@ -123,13 +123,15 @@
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
     font-weight: 400;
     min-height: 100vh;
-    padding: 0 0 calc(104px + var(--safe-bottom)) 0;
+    padding: 0;
     max-width: 600px;
     margin: 0 auto;
     line-height: 1.42;
     font-size: 17px;
     letter-spacing: -0.2px;
   }
+
+  body.app-ready { padding-bottom: calc(104px + var(--safe-bottom)); }
 
   button { font-family: inherit; }
 
@@ -166,6 +168,7 @@
     margin-bottom: 18px;
   }
   .pin-logo img { width: 100%; height: 100%; object-fit: contain; display: block; }
+  .pin-mlt { width: 150px; max-width: 55%; border-radius: 12px; display: block; margin: 0 auto; opacity: 0.95; }
   .pin-title {
     font-size: 28px; font-weight: 800;
     letter-spacing: -1px;
@@ -1349,6 +1352,7 @@
     bottom: 0; left: 0; right: 0;
     background: var(--bg);
     border-top: 0.5px solid var(--separator);
+    box-shadow: 0 -10px 28px -6px rgba(0,0,0,0.55);
     display: none;
     justify-content: center;
     align-items: center;
@@ -1448,7 +1452,7 @@
          class="pin-input" placeholder="••••" maxlength="10" autofocus />
   <div class="pin-error" id="pin-error"></div>
   <button class="pin-submit" id="pin-submit">Войти</button>
-  <div class="pin-foot">БАР ЖК HIDE</div>
+  <div class="pin-foot"><img class="pin-mlt" src="data:image/jpeg;base64,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" alt="MajorLab"></div>
 </div>
 
 <!-- ==================== ИНВЕНТАРИЗАЦИЯ ==================== -->
@@ -1684,9 +1688,17 @@
     <div class="stat-prog-lbl" id="profile-prog-lbl">Месячная норма</div>
   </div>
 
+  <!-- Стоп-лист -->
+  <div class="group-header">Стоп-лист</div>
+  <div class="inset-group" id="profile-stoplist"></div>
+
   <!-- Задачи на смену -->
   <div class="group-header">Задачи на смену</div>
   <div class="inset-group" id="profile-tasks"></div>
+
+  <!-- Чек-лист -->
+  <div class="group-header">Чек-лист</div>
+  <div class="inset-group" id="profile-checklist"></div>
 
   <!-- Обучение -->
   <div class="group-header">Обучение</div>
@@ -1824,6 +1836,21 @@ const SHIFT_TASKS = [
   'Подготовить микс-киты',
   'Провести инвентаризацию',
 ];
+// Чек-лист смены (отмечается галочкой)
+const CHECKLIST_ITEMS = [
+  'Протереть барную стойку и поверхности',
+  'Проверить и пополнить лёд',
+  'Нарезать цитрусы и гарниши',
+  'Проверить сроки годности заготовок',
+  'Сверить кассу и оставить размен',
+  'Вынести мусор, помыть инвентарь',
+];
+// Стоп-лист (позиции, которых сейчас нет; позже — из iiko)
+const STOPLIST_ITEMS = [
+  { name: 'Негрони', reason: 'нет Кампари' },
+  { name: 'Эспрессо Мартини', reason: 'нет кофе' },
+  { name: 'Дайкири', reason: 'нет лайма' },
+];
 // Ставка за смену (должна совпадать с SHIFT_RATE в Code.gs)
 const SHIFT_RATE = 5600;
 // Месячная норма смен (для прогресс-бара в профиле)
@@ -1938,6 +1965,7 @@ function tryLogin() {
 
 // ============ ВКЛАДКИ ============
 function showApp() {
+  document.body.classList.add('app-ready');
   document.getElementById('screen-pin').classList.remove('active');
   document.getElementById('tab-bar').classList.add('show');
 
@@ -2945,19 +2973,41 @@ function renderProfile() {
     .catch(() => { renderProfileSalary([]); });
 
   // Задачи на смену
-  const tasksEl = document.getElementById('profile-tasks');
-  tasksEl.innerHTML = SHIFT_TASKS.map((t, i) =>
-    '<div class="task-row" data-i="' + i + '">' +
+  renderTaskList('profile-tasks', SHIFT_TASKS);
+  renderTaskList('profile-checklist', CHECKLIST_ITEMS);
+  renderStopList();
+}
+
+function renderTaskList(elId, arr) {
+  const el = document.getElementById(elId);
+  if (!el) return;
+  el.innerHTML = arr.map(function (t, i) {
+    return '<div class="task-row" data-i="' + i + '">' +
       '<div class="task-check"><svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" fill="#000"/></svg></div>' +
       '<div class="task-text">' + escapeHtml(t) + '</div>' +
-    '</div>'
-  ).join('');
-  tasksEl.querySelectorAll('.task-row').forEach(row => {
-    row.addEventListener('click', () => {
-      if (row.classList.contains('done')) row.classList.remove('done');
-      else row.classList.add('done');
-    });
+    '</div>';
+  }).join('');
+  el.querySelectorAll('.task-row').forEach(function (row) {
+    row.addEventListener('click', function () { row.classList.toggle('done'); });
   });
+}
+
+function renderStopList() {
+  const el = document.getElementById('profile-stoplist');
+  if (!el) return;
+  if (!STOPLIST_ITEMS.length) {
+    el.innerHTML = '<div class="task-row" style="cursor:default;"><div class="task-text" style="color:var(--gray);">Стоп-лист пуст</div></div>';
+    return;
+  }
+  el.innerHTML = STOPLIST_ITEMS.map(function (s) {
+    const reason = s.reason ? ' <span style="color:var(--gray);font-weight:400;">\u00b7 ' + escapeHtml(s.reason) + '</span>' : '';
+    return '<div class="task-row" style="cursor:default;">' +
+      '<div style="width:24px;height:24px;border-radius:50%;background:#FF3B30;flex-shrink:0;display:flex;align-items:center;justify-content:center;">' +
+        '<svg width="12" height="12" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18" stroke="#fff" stroke-width="3" fill="none" stroke-linecap="round"/></svg>' +
+      '</div>' +
+      '<div class="task-text">' + escapeHtml(s.name) + reason + '</div>' +
+    '</div>';
+  }).join('');
 }
 
 function renderProfileSalary(schedule) {
