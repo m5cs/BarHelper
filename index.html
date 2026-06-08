@@ -1449,6 +1449,10 @@
   .wo-add-btn-full:active { opacity: .85; }
   .wo-empty { font-size: 13px; color: var(--gray); padding: 4px 2px 10px; }
   .wo-added-list .wo-entry { margin-bottom: 8px; }
+  .wo-cat-body .wo-field { margin-top: 2px; }
+  .wo-cat-body .wo-suggest { margin-top: 8px; }
+  .wo-editor { margin-top: 10px; }
+  .wo-editor:empty { margin-top: 0; }
   .finish-wo-btn { width: 100%; border: none; border-radius: 16px; background: var(--lime); color: #0F0F0F; font-size: 16px; font-weight: 700; padding: 16px; margin: 18px 0 8px; cursor: pointer; font-family: inherit; }
   .finish-wo-btn:active { opacity: .85; }
   .test-q { background: var(--surface); border-radius: 16px; padding: 14px 16px; margin-bottom: 10px; }
@@ -3556,33 +3560,20 @@ function renderWriteoff() {
   let html = '<div class="wo-intro">Открой раздел, выбери позицию, укажи количество/вес и причину. Добавленные списания собираются внизу. <span style="opacity:.45">· сборка 30</span></div>';
   html += '<div class="group-header">Кто проводит списание</div><div class="chip-row" id="wo-user-row"></div>';
   WO_SECTIONS.forEach(function (sec) {
-    const rows = sec.items.map(function (it, i) {
-      return '<div class="wo-pos" id="wo-pos-' + sec.id + '-' + i + '">' +
-        '<div class="wo-pos-head" onclick="toggleWoPos(\'' + sec.id + '\',' + i + ')">' +
-          '<div class="wo-pos-name">' + escapeHtml(it.name) + '</div>' +
-          '<svg class="wo-chev" viewBox="0 0 7 12"><path d="M1 1l5 5-5 5" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>' +
-        '</div>' +
-        '<div class="wo-pos-body">' +
-          '<div class="wo-pos-srok">Срок годности: <b>' + escapeHtml(it.srok || '—') + '</b></div>' +
-          '<div class="wo-pos-row">' +
-            '<input class="wo-input wo-pos-qty" type="number" inputmode="decimal" placeholder="Количество / вес">' +
-            '<select class="wo-input wo-pos-unit">' + unitOptsFor(it.unit) + '</select>' +
-          '</div>' +
-          '<div class="wo-pos-row">' +
-            '<select class="wo-input wo-pos-reason" onchange="woReasonChange(this)">' + reasonOpts + '</select>' +
-          '</div>' +
-          '<input class="wo-input wo-pos-other" placeholder="Своя причина" style="display:none;width:100%;box-sizing:border-box;margin-bottom:8px;">' +
-          '<button class="wo-add-btn-full" onclick="addWoItem(\'' + sec.id + '\',' + i + ')">Добавить в списание</button>' +
-        '</div>' +
-      '</div>';
-    }).join('');
     html += '<div class="wo-cat" id="wo-sec-' + sec.id + '">' +
       '<div class="wo-cat-head" onclick="toggleWoSec(\'' + sec.id + '\')">' +
         '<div class="wo-cat-titles"><div class="wo-cat-name">' + escapeHtml(sec.name) + '</div></div>' +
         '<div class="wo-cat-state">' + sec.items.length + '</div>' +
         '<svg class="wo-chev" viewBox="0 0 7 12"><path d="M1 1l5 5-5 5" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>' +
       '</div>' +
-      '<div class="wo-cat-body" id="wo-secbody-' + sec.id + '" style="display:none;">' + rows + '</div>' +
+      '<div class="wo-cat-body" id="wo-secbody-' + sec.id + '" style="display:none;">' +
+        '<div class="wo-field">' +
+          '<input class="wo-input wo-name" id="wo-name-' + sec.id + '" placeholder="Название позиции" autocomplete="off" oninput="woSecFilter(\'' + sec.id + '\')" onfocus="woSecFilter(\'' + sec.id + '\')">' +
+          '<button class="wo-caret" type="button" onclick="woSecToggleList(\'' + sec.id + '\')" aria-label="Список"><svg viewBox="0 0 12 8"><path d="M1 1l5 5 5-5" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg></button>' +
+        '</div>' +
+        '<div class="wo-suggest" id="wo-suggest-' + sec.id + '"></div>' +
+        '<div class="wo-editor" id="wo-editor-' + sec.id + '"></div>' +
+      '</div>' +
     '</div>';
   });
   html += '<div class="group-header">Добавлено в списание</div><div id="wo-added" class="wo-added-list"></div>';
@@ -3728,44 +3719,116 @@ function toggleWoSec(secId) {
   body.style.display = open ? 'block' : 'none';
 }
 
-function toggleWoPos(secId, i) {
-  const pos = document.getElementById('wo-pos-' + secId + '-' + i);
-  if (pos) pos.classList.toggle('open');
+function woSecFilter(secId) {
+  const inp = document.getElementById('wo-name-' + secId);
+  if (!inp) return;
+  const q = (inp.value || '').trim().toLowerCase();
+  const sec = WO_SECTIONS.filter(function (s) { return s.id === secId; })[0];
+  const items = sec ? sec.items : [];
+  const list = q ? items.filter(function (it) { return it.name.toLowerCase().indexOf(q) !== -1; }) : items;
+  renderWoSecSuggest(secId, list);
+}
+
+function woSecToggleList(secId) {
+  const box = document.getElementById('wo-suggest-' + secId);
+  if (box && box.classList.contains('show')) { box.classList.remove('show'); return; }
+  const sec = WO_SECTIONS.filter(function (s) { return s.id === secId; })[0];
+  renderWoSecSuggest(secId, sec ? sec.items : []);
+  const inp = document.getElementById('wo-name-' + secId);
+  if (inp) inp.focus();
+}
+
+function renderWoSecSuggest(secId, list) {
+  const box = document.getElementById('wo-suggest-' + secId);
+  if (!box) return;
+  if (!list || !list.length) { box.classList.remove('show'); box.innerHTML = ''; return; }
+  box.innerHTML = list.map(function (it) {
+    return '<div class="wo-suggest-item" data-v="' + escapeHtml(it.name) + '" onclick="woSecPick(\'' + secId + '\', this.dataset.v)">' + escapeHtml(it.name) + '</div>';
+  }).join('');
+  box.classList.add('show');
+}
+
+function woSecPick(secId, name) {
+  const inp = document.getElementById('wo-name-' + secId);
+  if (inp) inp.value = name;
+  const box = document.getElementById('wo-suggest-' + secId);
+  if (box) box.classList.remove('show');
+  renderWoEditor(secId, name);
+}
+
+function renderWoEditor(secId, name) {
+  const wrap = document.getElementById('wo-editor-' + secId);
+  if (!wrap) return;
+  const sec = WO_SECTIONS.filter(function (s) { return s.id === secId; })[0];
+  const item = sec ? sec.items.filter(function (it) { return it.name === name; })[0] : null;
+  if (!item) { wrap.innerHTML = ''; wrap.removeAttribute('data-name'); return; }
+  const unitOpts = WRITEOFF_UNITS.map(function (u) { return '<option value="' + u + '"' + (u === item.unit ? ' selected' : '') + '>' + u + '</option>'; }).join('');
+  const reasonOpts = WO_REASONS.map(function (r) { return '<option value="' + escapeHtml(r) + '">' + escapeHtml(r) + '</option>'; }).join('');
+  wrap.innerHTML =
+    '<div class="wo-pos-srok">Срок годности: <b>' + escapeHtml(item.srok || '—') + '</b></div>' +
+    '<div class="wo-pos-row">' +
+      '<input class="wo-input wo-pos-qty" type="number" inputmode="decimal" placeholder="Количество / вес">' +
+      '<select class="wo-input wo-pos-unit">' + unitOpts + '</select>' +
+    '</div>' +
+    '<div class="wo-pos-row">' +
+      '<select class="wo-input wo-pos-reason" onchange="woReasonChange(this)">' + reasonOpts + '</select>' +
+    '</div>' +
+    '<input class="wo-input wo-pos-other" placeholder="Своя причина" style="display:none;width:100%;box-sizing:border-box;margin-bottom:8px;">' +
+    '<button class="wo-add-btn-full" onclick="addWoItem(\'' + secId + '\')">Добавить в списание</button>';
+  wrap.setAttribute('data-name', name);
+  const qty = wrap.querySelector('.wo-pos-qty');
+  if (qty) { try { qty.focus(); } catch (e) {} }
 }
 
 function woReasonChange(sel) {
-  const body = sel.closest('.wo-pos-body');
-  if (!body) return;
-  const other = body.querySelector('.wo-pos-other');
+  const box = sel.closest('.wo-editor');
+  const other = box ? box.querySelector('.wo-pos-other') : null;
   if (other) other.style.display = (sel.value === 'Другое') ? 'block' : 'none';
 }
 
-function addWoItem(secId, i) {
-  const pos = document.getElementById('wo-pos-' + secId + '-' + i);
-  if (!pos) return;
-  const qtyEl = pos.querySelector('.wo-pos-qty');
-  const unitEl = pos.querySelector('.wo-pos-unit');
-  const reasonEl = pos.querySelector('.wo-pos-reason');
-  const otherEl = pos.querySelector('.wo-pos-other');
-  const name = pos.querySelector('.wo-pos-name').textContent;
-  const qty = (qtyEl.value || '').trim();
-  if (!qty) {
-    qtyEl.style.borderColor = '#FF3B30';
-    setTimeout(function () { qtyEl.style.borderColor = ''; }, 1200);
-    qtyEl.focus();
+function addWoItem(secId) {
+  const wrap = document.getElementById('wo-editor-' + secId);
+  const nameInput = document.getElementById('wo-name-' + secId);
+  if (!wrap) return;
+  const name = wrap.getAttribute('data-name') || '';
+  if (!name) {
+    if (nameInput) {
+      nameInput.style.borderColor = '#FF3B30';
+      setTimeout(function () { nameInput.style.borderColor = ''; }, 1200);
+      nameInput.focus();
+    }
     return;
   }
-  let reason = reasonEl.value;
-  if (reason === 'Другое') reason = (otherEl.value || '').trim() || 'Другое';
+  const qtyEl = wrap.querySelector('.wo-pos-qty');
+  const unitEl = wrap.querySelector('.wo-pos-unit');
+  const reasonEl = wrap.querySelector('.wo-pos-reason');
+  const otherEl = wrap.querySelector('.wo-pos-other');
+  const qty = ((qtyEl && qtyEl.value) || '').trim();
+  if (!qty) {
+    if (qtyEl) {
+      qtyEl.style.borderColor = '#FF3B30';
+      setTimeout(function () { qtyEl.style.borderColor = ''; }, 1200);
+      qtyEl.focus();
+    }
+    return;
+  }
+  let reason = reasonEl ? reasonEl.value : '';
+  if (reason === 'Другое') reason = ((otherEl && otherEl.value) || '').trim() || 'Другое';
   const sec = WO_SECTIONS.filter(function (x) { return x.id === secId; })[0];
   if (!Array.isArray(state.woItems)) state.woItems = [];
-  state.woItems.push({ section: sec ? sec.name : '', name: name, qty: qty, unit: unitEl.value || 'шт', reason: reason });
-  qtyEl.value = '';
-  if (otherEl) { otherEl.value = ''; otherEl.style.display = 'none'; }
-  reasonEl.selectedIndex = 0;
-  pos.classList.remove('open');
+  state.woItems.push({ section: sec ? sec.name : '', name: name, qty: qty, unit: (unitEl && unitEl.value) || 'шт', reason: reason });
+  wrap.innerHTML = '';
+  wrap.removeAttribute('data-name');
+  if (nameInput) nameInput.value = '';
   renderWoAdded();
 }
+
+function closeAllWoSuggest() {
+  document.querySelectorAll('.wo-suggest.show').forEach(function (b) { b.classList.remove('show'); });
+}
+document.addEventListener('click', function (e) {
+  if (!e.target.closest || !e.target.closest('.wo-cat-body')) closeAllWoSuggest();
+});
 
 function removeWoItem(idx) {
   if (Array.isArray(state.woItems)) { state.woItems.splice(idx, 1); renderWoAdded(); }
