@@ -3368,7 +3368,7 @@ function switchInvMode(mode) {
 
 function renderWriteoff() {
   if (!state.writeoff) state.writeoff = {};
-  let html = '<div class="wo-intro">Отметь, что списали за смену. Пустые категории уйдут в бланк как «—». В конце нажми «Завершить списание».</div>';
+  let html = '<div class="wo-intro">Отметь, что списали за смену. Пустые категории уйдут в бланк как «—». В конце нажми «Завершить списание». <span style="opacity:.45">· сборка 25</span></div>';
   html += '<div class="group-header">Кто проводит списание</div><div class="chip-row" id="wo-user-row"></div>';
   WRITEOFF_CATEGORIES.forEach(cat => {
     if (!state.writeoff[cat.id]) state.writeoff[cat.id] = [];
@@ -3391,7 +3391,7 @@ function renderWriteoff() {
             '<div class="wo-suggest" id="wo-suggest-' + cat.id + '"></div>' +
             '<input class="wo-input wo-qty" id="wo-qty-' + cat.id + '" type="number" inputmode="decimal" placeholder="Кол-во" onkeydown="if(event.key===\'Enter\')addWoEntry(\'' + cat.id + '\')">' +
             '<select class="wo-input wo-unit" id="wo-unit-' + cat.id + '">' + unitOpts + '</select>' +
-            '<button class="wo-add-btn" onclick="addWoEntry(\'' + cat.id + '\')">+</button>' +
+            '<button class="wo-add-btn" onmousedown="event.preventDefault()" ontouchstart="" onclick="addWoEntry(\'' + cat.id + '\')">+</button>' +
             '<input class="wo-input wo-note" id="wo-note-' + cat.id + '" placeholder="Комментарий (необязательно)" autocomplete="off">' +
           '</div>' +
         '</div>' +
@@ -3430,7 +3430,12 @@ function addWoEntry(catId) {
   const unitEl = document.getElementById('wo-unit-' + catId);
   const noteEl = document.getElementById('wo-note-' + catId);
   const name = (nameEl.value || '').trim();
-  if (!name) { nameEl.focus(); return; }
+  if (!name) {
+    nameEl.style.borderColor = '#FF3B30';
+    setTimeout(function () { nameEl.style.borderColor = ''; }, 1200);
+    nameEl.focus();
+    return;
+  }
   const qty = (qtyEl.value || '').trim() || '1';
   const unit = unitEl.value || 'шт';
   const note = (noteEl.value || '').trim();
