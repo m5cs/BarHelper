@@ -139,7 +139,8 @@
     letter-spacing: -0.2px;
   }
 
-  body.app-ready { padding-bottom: calc(128px + var(--safe-bottom)); }
+  body.app-ready { display: flex; flex-direction: column; height: 100vh; height: 100dvh; overflow: hidden; }
+  body.app-ready .screen.active { flex: 1 1 auto; min-height: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; }
 
   button { font-family: inherit; }
 
@@ -678,7 +679,7 @@
 
   /* ============ КАТЕГОРИИ ТТК ============ */
   /* Категории растягиваются на всю высоту до нижнего меню */
-  #screen-recipes.active { display: flex; flex-direction: column; min-height: calc(100vh - 128px - var(--safe-bottom)); }
+  #screen-recipes.active { display: flex; flex-direction: column; min-height: 0; }
   #recipes-list.cats-fill { flex: 1 1 auto; display: flex; flex-direction: column; gap: 10px; }
   #recipes-list.cats-fill .category-card { flex: 1 1 0; margin-bottom: 0; }
 
@@ -1356,8 +1357,7 @@
   /* ============ TAB BAR (iOS) ============ */
   /* ============ МЕНЮ — круглое (Pilo) ============ */
   .tab-bar {
-    position: fixed;
-    bottom: 0; left: 0; right: 0;
+    flex: 0 0 auto;
     background: var(--bg);
     border-top: 0.5px solid var(--separator);
     box-shadow: 0 -0.5px 0 var(--separator), 0 -4px 14px rgba(0,0,0,0.06);
@@ -1366,9 +1366,6 @@
     align-items: center;
     gap: 18px;
     padding: 12px 12px calc(20px + var(--safe-bottom));
-    z-index: 1000;
-    max-width: 600px;
-    margin: 0 auto;
   }
   .tab-bar.show { display: flex; }
   .tab {
@@ -1435,6 +1432,23 @@
   .wo-suggest-item { padding: 11px 14px; font-size: 14px; cursor: pointer; border-bottom: 0.5px solid var(--separator); }
   .wo-suggest-item:last-child { border-bottom: none; }
   .wo-suggest-item:active { background: var(--surface); }
+  .wo-pos { border-top: 0.5px solid var(--separator); }
+  .wo-cat-body > .wo-pos:first-child { border-top: none; }
+  .wo-pos-head { display: flex; align-items: center; gap: 10px; padding: 13px 2px; cursor: pointer; }
+  .wo-pos-head:active { opacity: .6; }
+  .wo-pos-name { flex: 1; min-width: 0; font-size: 15px; font-weight: 600; }
+  .wo-pos.open .wo-chev { transform: rotate(90deg); }
+  .wo-pos-body { display: none; padding: 2px 0 14px; }
+  .wo-pos.open .wo-pos-body { display: block; }
+  .wo-pos-srok { font-size: 13px; color: var(--gray); margin-bottom: 10px; }
+  .wo-pos-srok b { color: var(--ink); font-weight: 700; }
+  .wo-pos-row { display: flex; gap: 8px; margin-bottom: 8px; }
+  .wo-pos-row .wo-input { flex: 1; min-width: 0; }
+  .wo-pos-row .wo-pos-unit { flex: 0 0 88px; }
+  .wo-add-btn-full { width: 100%; border: none; border-radius: 12px; background: var(--card-accent); color: var(--card-accent-text); font-size: 15px; font-weight: 700; padding: 13px; cursor: pointer; font-family: inherit; margin-top: 2px; }
+  .wo-add-btn-full:active { opacity: .85; }
+  .wo-empty { font-size: 13px; color: var(--gray); padding: 4px 2px 10px; }
+  .wo-added-list .wo-entry { margin-bottom: 8px; }
   .finish-wo-btn { width: 100%; border: none; border-radius: 16px; background: var(--lime); color: #0F0F0F; font-size: 16px; font-weight: 700; padding: 16px; margin: 18px 0 8px; cursor: pointer; font-family: inherit; }
   .finish-wo-btn:active { opacity: .85; }
   .test-q { background: var(--surface); border-radius: 16px; padding: 14px 16px; margin-bottom: 10px; }
@@ -2061,7 +2075,8 @@ function switchTab(screen) {
       updateSaveButton();
     }
 
-    window.scrollTo({ top: 0 });
+    var _activeScr = document.querySelector('.screen.active');
+    if (_activeScr) _activeScr.scrollTop = 0;
   } catch (err) {
     console.error('switchTab error:', err);
     alert('Ошибка переключения вкладки: ' + (err && err.message ? err.message : err));
@@ -3410,27 +3425,106 @@ function escapeHtml(s) {
 // ==================== СПИСАНИЯ ====================
 const WRITEOFF_UNITS = ['шт', 'г', 'мл', 'л', 'порц'];
 
-const WRITEOFF_CATEGORIES = [
-  { id: 'nastrojka', name: 'Настройка', hint: 'Калибровка / разовое',
-    items: ['Эспрессо', 'Молоко', 'Молоко 3,2%', 'Лёд'] },
-  { id: 'srok', name: 'Срок', hint: 'Срок годности — основной объём',
-    items: ['Чизкейк','Медовик','Круассан классический','Круассан малиновый','Круассан миндальный','Эклер карамельный','Эклер сливочный (ваниль)','Десерт манго (мусс)','Десерт кофейное зерно','Вупи малина','Вупи варёнка','Гранола','Йогурт с гранолой','Сэндвич груша','Сэндвич курица','Сэндвич индейка','Сэндвич окорок','Блины с творогом','Блины с мясом','Рулет из омлета','Омлет (с ветчиной)','Пармезан','Чеддер','Карпаччо','Пастрами','Окорок сыровяленый','Говядина сыровяленая','Камамбер','Дор блю','Оливки','Маслины','Апельсин','Лимон','Лайм','Грейпфрут','Яблоки','Морковь','Мята','Базилик','Имбирь','Шпинат','Личи','Черника','Брезаола','Фреш апельсин','Фреш лайм','Фреш лимон','Юдзу','Каламанси','Мёд алоэ','Пена алоэ','Жасмин колд брю','Облепиха п/ф','Маракуйя п/ф','Миндальное молоко','Сливки 33%','Взбитые сливки','Белок «удобное яйцо»','Францисканер','Гиннес','Вода Байкал','Вода Бон Аква газ'] },
-  { id: 'fasovka', name: 'Фасовка', hint: 'Обрезь при нарезке',
-    items: ['Пармезан','Чеддер','Карпаччо','Пастрами','Брезаола','Парма'] },
-  { id: 'porcha', name: 'Порча', hint: 'Испортилось при хранении/приёмке',
-    items: ['Апельсин','Яблоки','Лимон','Лайм','Грейпфрут','Бананы','Базилик','Мята','Парма','Камамбер','Сливки 33%','Рулет из омлета','Чизкейк','Десерт манго (треснутый)','Сэндвич окорок','п/ф лимон','п/ф лайм','Вода Байкал б/г'] },
-  { id: 'boy', name: 'Бой', hint: 'Разбитая посуда',
-    items: ['Рокс (Rona)','Флюте','Снифтер','Рюмка','Хайболл','Бокал под красное','Шале','Крышка чайника'] },
-  { id: 'brak', name: 'Брак', hint: 'Дефект при приёмке от поставщика',
-    items: ['Апельсины'] },
-  { id: 'oshibka', name: 'Ошибка приготовления', hint: '',
-    items: ['Кокосовое молоко'] },
-  { id: 'prorabotka', name: 'Списание / Проработка', hint: 'Рецептуры + стажёры',
-    items: ['Калпис виноград','Юдзу п/ф','Жасмин п/ф','Имбирь п/ф','Пена алоэ','Облепиха п/ф','Апельсин п/ф','Лайм','Лимон п/ф','Палочки корицы','Мёд'] },
-];
+const WO_REASONS = ['Срок', 'Бой', 'Порча', 'Брак', 'Комплимент', 'Ошибка приготовления', 'Проработка', 'Настройка', 'Другое'];
 
-const woItemsById = {};
-WRITEOFF_CATEGORIES.forEach(c => { woItemsById[c.id] = c.items; });
+const WO_SECTIONS = [
+  { id: 'polufabrikaty', name: 'Полуфабрикаты', items: [
+    { name: 'Облепиха п/ф', srok: '5 дней', unit: 'мл' },
+    { name: 'Маракуйя п/ф', srok: '5 дней', unit: 'мл' },
+    { name: 'Юдзу п/ф', srok: '7 дней', unit: 'мл' },
+    { name: 'Жасмин п/ф', srok: '5 дней', unit: 'мл' },
+    { name: 'Имбирь п/ф', srok: '5 дней', unit: 'мл' },
+    { name: 'Лимон п/ф', srok: '3 дня', unit: 'мл' },
+    { name: 'Лайм п/ф', srok: '3 дня', unit: 'мл' },
+    { name: 'Калпис виноград', srok: '7 дней', unit: 'мл' },
+    { name: 'Мёд алоэ', srok: '7 дней', unit: 'мл' },
+    { name: 'Пена алоэ', srok: '3 дня', unit: 'мл' },
+    { name: 'Жасмин колд брю', srok: '2 дня', unit: 'мл' },
+    { name: 'Миндальное молоко', srok: '3 дня', unit: 'мл' },
+    { name: 'Белок «удобное яйцо»', srok: 'по упаковке', unit: 'мл' },
+  ]},
+  { id: 'frukty', name: 'Фрукты и зелень', items: [
+    { name: 'Апельсин', srok: '5 дней', unit: 'шт' },
+    { name: 'Лимон', srok: '7 дней', unit: 'шт' },
+    { name: 'Лайм', srok: '7 дней', unit: 'шт' },
+    { name: 'Грейпфрут', srok: '7 дней', unit: 'шт' },
+    { name: 'Яблоки', srok: '7 дней', unit: 'шт' },
+    { name: 'Бананы', srok: '4 дня', unit: 'шт' },
+    { name: 'Морковь', srok: '10 дней', unit: 'шт' },
+    { name: 'Мята', srok: '3 дня', unit: 'г' },
+    { name: 'Базилик', srok: '3 дня', unit: 'г' },
+    { name: 'Имбирь', srok: '14 дней', unit: 'г' },
+    { name: 'Шпинат', srok: '4 дня', unit: 'г' },
+    { name: 'Личи', srok: '4 дня', unit: 'г' },
+    { name: 'Черника', srok: '4 дня', unit: 'г' },
+  ]},
+  { id: 'deserty', name: 'Десерты', items: [
+    { name: 'Чизкейк', srok: '3 дня', unit: 'шт' },
+    { name: 'Медовик', srok: '3 дня', unit: 'шт' },
+    { name: 'Эклер карамельный', srok: '2 дня', unit: 'шт' },
+    { name: 'Эклер сливочный (ваниль)', srok: '2 дня', unit: 'шт' },
+    { name: 'Десерт манго (мусс)', srok: '2 дня', unit: 'шт' },
+    { name: 'Десерт кофейное зерно', srok: '2 дня', unit: 'шт' },
+    { name: 'Вупи малина', srok: '3 дня', unit: 'шт' },
+    { name: 'Вупи варёнка', srok: '3 дня', unit: 'шт' },
+    { name: 'Гранола', srok: '14 дней', unit: 'г' },
+    { name: 'Йогурт с гранолой', srok: '3 дня', unit: 'шт' },
+  ]},
+  { id: 'vypechka', name: 'Выпечка и сэндвичи', items: [
+    { name: 'Круассан классический', srok: '2 дня', unit: 'шт' },
+    { name: 'Круассан малиновый', srok: '2 дня', unit: 'шт' },
+    { name: 'Круассан миндальный', srok: '2 дня', unit: 'шт' },
+    { name: 'Сэндвич груша', srok: '1 день', unit: 'шт' },
+    { name: 'Сэндвич курица', srok: '1 день', unit: 'шт' },
+    { name: 'Сэндвич индейка', srok: '1 день', unit: 'шт' },
+    { name: 'Сэндвич окорок', srok: '1 день', unit: 'шт' },
+    { name: 'Блины с творогом', srok: '2 дня', unit: 'шт' },
+    { name: 'Блины с мясом', srok: '2 дня', unit: 'шт' },
+    { name: 'Рулет из омлета', srok: '2 дня', unit: 'шт' },
+    { name: 'Омлет (с ветчиной)', srok: '1 день', unit: 'шт' },
+  ]},
+  { id: 'syr_myaso', name: 'Сыры и мясо', items: [
+    { name: 'Пармезан', srok: 'по упаковке', unit: 'г' },
+    { name: 'Чеддер', srok: 'по упаковке', unit: 'г' },
+    { name: 'Камамбер', srok: '5 дней', unit: 'г' },
+    { name: 'Дор блю', srok: '7 дней', unit: 'г' },
+    { name: 'Карпаччо', srok: '2 дня', unit: 'г' },
+    { name: 'Пастрами', srok: '3 дня', unit: 'г' },
+    { name: 'Окорок сыровяленый', srok: '5 дней', unit: 'г' },
+    { name: 'Говядина сыровяленая', srok: '5 дней', unit: 'г' },
+    { name: 'Брезаола', srok: '5 дней', unit: 'г' },
+    { name: 'Парма', srok: '5 дней', unit: 'г' },
+    { name: 'Оливки', srok: '5 дней', unit: 'г' },
+    { name: 'Маслины', srok: '5 дней', unit: 'г' },
+  ]},
+  { id: 'moloko', name: 'Молочное', items: [
+    { name: 'Молоко', srok: 'по упаковке', unit: 'мл' },
+    { name: 'Молоко 3,2%', srok: 'по упаковке', unit: 'мл' },
+    { name: 'Сливки 33%', srok: 'по упаковке', unit: 'мл' },
+    { name: 'Взбитые сливки', srok: '1 день', unit: 'мл' },
+    { name: 'Кокосовое молоко', srok: 'по упаковке', unit: 'мл' },
+  ]},
+  { id: 'napitki', name: 'Напитки', items: [
+    { name: 'Фреш апельсин', srok: '1 день', unit: 'мл' },
+    { name: 'Фреш лайм', srok: '1 день', unit: 'мл' },
+    { name: 'Фреш лимон', srok: '1 день', unit: 'мл' },
+    { name: 'Эспрессо', srok: 'разовое', unit: 'мл' },
+    { name: 'Францисканер', srok: 'по упаковке', unit: 'шт' },
+    { name: 'Гиннес', srok: 'по упаковке', unit: 'шт' },
+    { name: 'Вода Байкал', srok: 'по упаковке', unit: 'шт' },
+    { name: 'Вода Бон Аква газ', srok: 'по упаковке', unit: 'шт' },
+  ]},
+  { id: 'posuda', name: 'Посуда', items: [
+    { name: 'Рокс (Rona)', srok: '—', unit: 'шт' },
+    { name: 'Флюте', srok: '—', unit: 'шт' },
+    { name: 'Снифтер', srok: '—', unit: 'шт' },
+    { name: 'Рюмка', srok: '—', unit: 'шт' },
+    { name: 'Хайболл', srok: '—', unit: 'шт' },
+    { name: 'Бокал под красное', srok: '—', unit: 'шт' },
+    { name: 'Шале', srok: '—', unit: 'шт' },
+    { name: 'Крышка чайника', srok: '—', unit: 'шт' },
+  ]},
+];
 
 function switchInvMode(mode) {
   state.invMode = mode;
@@ -3456,40 +3550,46 @@ function switchInvMode(mode) {
 }
 
 function renderWriteoff() {
-  if (!state.writeoff) state.writeoff = {};
-  let html = '<div class="wo-intro">Отметь, что списали за смену. Пустые категории уйдут в бланк как «—». В конце нажми «Завершить списание». <span style="opacity:.45">· сборка 25</span></div>';
+  if (!Array.isArray(state.woItems)) state.woItems = [];
+  const unitOptsFor = function (def) { return WRITEOFF_UNITS.map(function (u) { return '<option value="' + u + '"' + (u === def ? ' selected' : '') + '>' + u + '</option>'; }).join(''); };
+  const reasonOpts = WO_REASONS.map(function (r) { return '<option value="' + escapeHtml(r) + '">' + escapeHtml(r) + '</option>'; }).join('');
+  let html = '<div class="wo-intro">Открой раздел, выбери позицию, укажи количество/вес и причину. Добавленные списания собираются внизу. <span style="opacity:.45">· сборка 30</span></div>';
   html += '<div class="group-header">Кто проводит списание</div><div class="chip-row" id="wo-user-row"></div>';
-  WRITEOFF_CATEGORIES.forEach(cat => {
-    if (!state.writeoff[cat.id]) state.writeoff[cat.id] = [];
-    const unitOpts = WRITEOFF_UNITS.map(u => '<option value="' + u + '">' + u + '</option>').join('');
-    const hint = cat.hint ? '<div class="wo-cat-hint">' + escapeHtml(cat.hint) + '</div>' : '';
-    html +=
-      '<div class="wo-cat" id="wo-cat-' + cat.id + '">' +
-        '<div class="wo-cat-head" onclick="toggleWoCat(\'' + cat.id + '\')">' +
-          '<div class="wo-cat-titles"><div class="wo-cat-name">' + escapeHtml(cat.name) + '</div>' + hint + '</div>' +
-          '<div class="wo-cat-state" id="wo-state-' + cat.id + '">—</div>' +
+  WO_SECTIONS.forEach(function (sec) {
+    const rows = sec.items.map(function (it, i) {
+      return '<div class="wo-pos" id="wo-pos-' + sec.id + '-' + i + '">' +
+        '<div class="wo-pos-head" onclick="toggleWoPos(\'' + sec.id + '\',' + i + ')">' +
+          '<div class="wo-pos-name">' + escapeHtml(it.name) + '</div>' +
           '<svg class="wo-chev" viewBox="0 0 7 12"><path d="M1 1l5 5-5 5" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>' +
         '</div>' +
-        '<div class="wo-cat-body" id="wo-body-' + cat.id + '" style="display:none;">' +
-          '<div class="wo-entries" id="wo-entries-' + cat.id + '"></div>' +
-          '<div class="wo-add">' +
-            '<div class="wo-field">' +
-              '<input class="wo-input wo-name" id="wo-name-' + cat.id + '" placeholder="Название позиции" autocomplete="off" oninput="woFilter(\'' + cat.id + '\')" onfocus="woFilter(\'' + cat.id + '\')" onkeydown="if(event.key===\'Enter\')addWoEntry(\'' + cat.id + '\')">' +
-              '<button class="wo-caret" type="button" onclick="woToggleList(\'' + cat.id + '\')" aria-label="Список"><svg viewBox="0 0 12 8"><path d="M1 1l5 5 5-5" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg></button>' +
-            '</div>' +
-            '<div class="wo-suggest" id="wo-suggest-' + cat.id + '"></div>' +
-            '<input class="wo-input wo-qty" id="wo-qty-' + cat.id + '" type="number" inputmode="decimal" placeholder="Кол-во" onkeydown="if(event.key===\'Enter\')addWoEntry(\'' + cat.id + '\')">' +
-            '<select class="wo-input wo-unit" id="wo-unit-' + cat.id + '">' + unitOpts + '</select>' +
-            '<button class="wo-add-btn" onmousedown="event.preventDefault()" ontouchstart="" onclick="addWoEntry(\'' + cat.id + '\')">+</button>' +
-            '<input class="wo-input wo-note" id="wo-note-' + cat.id + '" placeholder="Комментарий (необязательно)" autocomplete="off">' +
+        '<div class="wo-pos-body">' +
+          '<div class="wo-pos-srok">Срок годности: <b>' + escapeHtml(it.srok || '—') + '</b></div>' +
+          '<div class="wo-pos-row">' +
+            '<input class="wo-input wo-pos-qty" type="number" inputmode="decimal" placeholder="Количество / вес">' +
+            '<select class="wo-input wo-pos-unit">' + unitOptsFor(it.unit) + '</select>' +
           '</div>' +
+          '<div class="wo-pos-row">' +
+            '<select class="wo-input wo-pos-reason" onchange="woReasonChange(this)">' + reasonOpts + '</select>' +
+          '</div>' +
+          '<input class="wo-input wo-pos-other" placeholder="Своя причина" style="display:none;width:100%;box-sizing:border-box;margin-bottom:8px;">' +
+          '<button class="wo-add-btn-full" onclick="addWoItem(\'' + sec.id + '\',' + i + ')">Добавить в списание</button>' +
         '</div>' +
       '</div>';
+    }).join('');
+    html += '<div class="wo-cat" id="wo-sec-' + sec.id + '">' +
+      '<div class="wo-cat-head" onclick="toggleWoSec(\'' + sec.id + '\')">' +
+        '<div class="wo-cat-titles"><div class="wo-cat-name">' + escapeHtml(sec.name) + '</div></div>' +
+        '<div class="wo-cat-state">' + sec.items.length + '</div>' +
+        '<svg class="wo-chev" viewBox="0 0 7 12"><path d="M1 1l5 5-5 5" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>' +
+      '</div>' +
+      '<div class="wo-cat-body" id="wo-secbody-' + sec.id + '" style="display:none;">' + rows + '</div>' +
+    '</div>';
   });
+  html += '<div class="group-header">Добавлено в списание</div><div id="wo-added" class="wo-added-list"></div>';
   html += '<button class="finish-wo-btn" onclick="finishWriteoff()">Завершить списание</button>';
   document.getElementById('writeoff-content').innerHTML = html;
   renderWoUsers();
-  WRITEOFF_CATEGORIES.forEach(cat => { renderWoEntries(cat.id); });
+  renderWoAdded();
 }
 
 function renderWoUsers() {
@@ -3620,160 +3720,121 @@ function finishTest() {
 }
 
 
-function toggleWoCat(catId) {
-  const cat = document.getElementById('wo-cat-' + catId);
-  const body = document.getElementById('wo-body-' + catId);
-  const open = cat.classList.toggle('open');
+function toggleWoSec(secId) {
+  const sec = document.getElementById('wo-sec-' + secId);
+  const body = document.getElementById('wo-secbody-' + secId);
+  if (!sec || !body) return;
+  const open = sec.classList.toggle('open');
   body.style.display = open ? 'block' : 'none';
 }
 
-function addWoEntry(catId) {
-  const nameEl = document.getElementById('wo-name-' + catId);
-  const qtyEl = document.getElementById('wo-qty-' + catId);
-  const unitEl = document.getElementById('wo-unit-' + catId);
-  const noteEl = document.getElementById('wo-note-' + catId);
-  const name = (nameEl.value || '').trim();
-  if (!name) {
-    nameEl.style.borderColor = '#FF3B30';
-    setTimeout(function () { nameEl.style.borderColor = ''; }, 1200);
-    nameEl.focus();
+function toggleWoPos(secId, i) {
+  const pos = document.getElementById('wo-pos-' + secId + '-' + i);
+  if (pos) pos.classList.toggle('open');
+}
+
+function woReasonChange(sel) {
+  const body = sel.closest('.wo-pos-body');
+  if (!body) return;
+  const other = body.querySelector('.wo-pos-other');
+  if (other) other.style.display = (sel.value === 'Другое') ? 'block' : 'none';
+}
+
+function addWoItem(secId, i) {
+  const pos = document.getElementById('wo-pos-' + secId + '-' + i);
+  if (!pos) return;
+  const qtyEl = pos.querySelector('.wo-pos-qty');
+  const unitEl = pos.querySelector('.wo-pos-unit');
+  const reasonEl = pos.querySelector('.wo-pos-reason');
+  const otherEl = pos.querySelector('.wo-pos-other');
+  const name = pos.querySelector('.wo-pos-name').textContent;
+  const qty = (qtyEl.value || '').trim();
+  if (!qty) {
+    qtyEl.style.borderColor = '#FF3B30';
+    setTimeout(function () { qtyEl.style.borderColor = ''; }, 1200);
+    qtyEl.focus();
     return;
   }
-  const qty = (qtyEl.value || '').trim() || '1';
-  const unit = unitEl.value || 'шт';
-  const note = (noteEl.value || '').trim();
-  if (!state.writeoff[catId]) state.writeoff[catId] = [];
-  state.writeoff[catId].push({ name: name, qty: qty, unit: unit, note: note });
-  nameEl.value = ''; qtyEl.value = ''; noteEl.value = ''; unitEl.value = 'шт';
-  nameEl.focus();
-  renderWoEntries(catId);
+  let reason = reasonEl.value;
+  if (reason === 'Другое') reason = (otherEl.value || '').trim() || 'Другое';
+  const sec = WO_SECTIONS.filter(function (x) { return x.id === secId; })[0];
+  if (!Array.isArray(state.woItems)) state.woItems = [];
+  state.woItems.push({ section: sec ? sec.name : '', name: name, qty: qty, unit: unitEl.value || 'шт', reason: reason });
+  qtyEl.value = '';
+  if (otherEl) { otherEl.value = ''; otherEl.style.display = 'none'; }
+  reasonEl.selectedIndex = 0;
+  pos.classList.remove('open');
+  renderWoAdded();
 }
 
-function removeWoEntry(catId, idx) {
-  if (state.writeoff[catId]) {
-    state.writeoff[catId].splice(idx, 1);
-    renderWoEntries(catId);
-  }
+function removeWoItem(idx) {
+  if (Array.isArray(state.woItems)) { state.woItems.splice(idx, 1); renderWoAdded(); }
 }
 
-function renderWoEntries(catId) {
-  const wrap = document.getElementById('wo-entries-' + catId);
+function renderWoAdded() {
+  const wrap = document.getElementById('wo-added');
   if (!wrap) return;
-  const entries = state.writeoff[catId] || [];
-  wrap.innerHTML = entries.map((e, i) =>
-    '<div class="wo-entry">' +
+  const items = Array.isArray(state.woItems) ? state.woItems : [];
+  if (!items.length) { wrap.innerHTML = '<div class="wo-empty">Пока ничего не добавлено</div>'; return; }
+  wrap.innerHTML = items.map(function (e, i) {
+    return '<div class="wo-entry">' +
       '<div class="wo-entry-main">' +
         '<div class="wo-entry-name">' + escapeHtml(e.name) + '</div>' +
-        (e.note ? '<div class="wo-entry-note">' + escapeHtml(e.note) + '</div>' : '') +
+        '<div class="wo-entry-note">' + escapeHtml(e.section) + ' · ' + escapeHtml(e.reason) + '</div>' +
       '</div>' +
-      '<div class="wo-entry-qty">' + escapeHtml(e.qty) + ' ' + escapeHtml(e.unit) + '</div>' +
-      '<button class="wo-entry-del" onclick="removeWoEntry(\'' + catId + '\',' + i + ')">&times;</button>' +
-    '</div>'
-  ).join('');
-  const state_el = document.getElementById('wo-state-' + catId);
-  if (state_el) {
-    if (entries.length) { state_el.textContent = entries.length + ' поз.'; state_el.classList.add('filled'); }
-    else { state_el.textContent = '—'; state_el.classList.remove('filled'); }
-  }
+      '<div class="wo-entry-qty">' + escapeHtml(String(e.qty)) + ' ' + escapeHtml(e.unit) + '</div>' +
+      '<button class="wo-entry-del" onclick="removeWoItem(' + i + ')">&times;</button>' +
+    '</div>';
+  }).join('');
 }
-
-function woFilter(catId) {
-  const inp = document.getElementById('wo-name-' + catId);
-  if (!inp) return;
-  const q = (inp.value || '').trim().toLowerCase();
-  const items = woItemsById[catId] || [];
-  const list = q ? items.filter(i => i.toLowerCase().indexOf(q) !== -1) : items;
-  renderWoSuggest(catId, list);
-}
-function woToggleList(catId) {
-  const box = document.getElementById('wo-suggest-' + catId);
-  if (box && box.classList.contains('show')) { box.classList.remove('show'); return; }
-  renderWoSuggest(catId, woItemsById[catId] || []);
-  const inp = document.getElementById('wo-name-' + catId);
-  if (inp) inp.focus();
-}
-function renderWoSuggest(catId, list) {
-  const box = document.getElementById('wo-suggest-' + catId);
-  if (!box) return;
-  if (!list || !list.length) { box.classList.remove('show'); box.innerHTML = ''; return; }
-  box.innerHTML = list.map(i =>
-    '<div class="wo-suggest-item" data-v="' + escapeHtml(i) + '" onclick="woPick(\'' + catId + '\', this.dataset.v)">' + escapeHtml(i) + '</div>'
-  ).join('');
-  box.classList.add('show');
-}
-function woPick(catId, value) {
-  const inp = document.getElementById('wo-name-' + catId);
-  if (inp) inp.value = value;
-  const box = document.getElementById('wo-suggest-' + catId);
-  if (box) box.classList.remove('show');
-  const qty = document.getElementById('wo-qty-' + catId);
-  if (qty) qty.focus();
-}
-function closeAllWoSuggest() {
-  document.querySelectorAll('.wo-suggest.show').forEach(b => b.classList.remove('show'));
-}
-document.addEventListener('click', function (e) {
-  if (!e.target.closest || !e.target.closest('.wo-field')) closeAllWoSuggest();
-});
 
 function buildWriteoffBlank() {
   const now = new Date();
-  const dt = now.toLocaleDateString('ru-RU') + ', ' +
-             now.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+  const dt = now.toLocaleDateString('ru-RU') + ', ' + now.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
   const lines = ['СПИСАНИЯ', 'Заведение: Бар ЖК HIDE', 'Дата: ' + dt, 'Сотрудник: ' + (state.woResponsible || PROFILE_NAME), ''];
-  let total = 0;
-  WRITEOFF_CATEGORIES.forEach(cat => {
-    const entries = state.writeoff[cat.id] || [];
-    if (!entries.length) {
-      lines.push(cat.name + ': —');
-    } else {
-      lines.push(cat.name + ':');
-      entries.forEach(e => {
-        total++;
-        let l = '  • ' + e.name + ' — ' + e.qty + ' ' + e.unit;
-        if (e.note) l += ' (' + e.note + ')';
-        lines.push(l);
-      });
-    }
+  const items = Array.isArray(state.woItems) ? state.woItems : [];
+  items.forEach(function (e) {
+    lines.push('• ' + e.name + ' — ' + e.qty + ' ' + e.unit + ' — ' + e.reason + (e.section ? ' [' + e.section + ']' : ''));
   });
   lines.push('');
-  lines.push('Всего позиций: ' + total);
+  lines.push('Всего позиций: ' + items.length);
   return lines.join('\n');
 }
 
 function finishWriteoff() {
-  const total = WRITEOFF_CATEGORIES.reduce((s, c) => s + ((state.writeoff[c.id] || []).length), 0);
-  if (total === 0) { alert('Добавь хотя бы одну позицию в списания.'); return; }
-  if (!confirm('Завершить списание и отправить менеджеру?\n\nВсего позиций: ' + total)) return;
+  const items = Array.isArray(state.woItems) ? state.woItems : [];
+  if (!items.length) { alert('Добавь хотя бы одну позицию в списания.'); return; }
+  if (!confirm('Завершить списание и отправить менеджеру?\n\nВсего позиций: ' + items.length)) return;
   const blank = buildWriteoffBlank();
   state._lastBlank = blank;
-  const payload = { responsible: (state.woResponsible || PROFILE_NAME), datetime: new Date().toISOString(), items: state.writeoff, blank: blank };
+  const payload = { responsible: (state.woResponsible || PROFILE_NAME), datetime: new Date().toISOString(), items: items, blank: blank };
   if (typeof setBusy === 'function') setBusy(true);
-  api('finishWriteoff', { payload })
-    .then(res => {
+  api('finishWriteoff', { payload: payload })
+    .then(function (res) {
       if (typeof setBusy === 'function') setBusy(false);
       if (res && res.ok && res.sent) {
         alert('✅ Бланк сохранён в таблицу и отправлен менеджеру.');
         resetWriteoff();
       } else if (res && res.ok) {
-        alert('✅ Бланк сохранён в таблицу (лист Writeoffs).\nОтправка менеджеру пока не настроена — нужен токен бота. Бланк можно скопировать.');
+        alert('✅ Бланк сохранён в таблицу (лист Writeoffs).\nОтправка менеджеру пока не настроена — нужен токен бота.');
         resetWriteoff();
         showWoModal(blank);
       } else {
-        alert('⚠️ Сервер не принял списание. Скорее всего, не передеплоена новая версия Apps Script. Бланк показан — можно отправить вручную.');
+        alert('⚠️ Сервер не принял списание. Возможно, не передеплоена новая версия Apps Script. Бланк показан — можно отправить вручную.');
         showWoModal(blank);
       }
     })
-    .catch(() => {
+    .catch(function () {
       if (typeof setBusy === 'function') setBusy(false);
-      // Бэкенд ещё не обновлён или ошибка — показываем бланк для ручной отправки
       showWoModal(blank);
     });
 }
 
 function resetWriteoff() {
-  state.writeoff = {};
+  state.woItems = [];
+  state.woRendered = false;
   renderWriteoff();
+  state.woRendered = true;
 }
 
 function showWoModal(text) {
@@ -3786,11 +3847,12 @@ function closeWoModal() {
 function copyWriteoffBlank() {
   const text = state._lastBlank || '';
   if (navigator.clipboard && navigator.clipboard.writeText) {
-    navigator.clipboard.writeText(text).then(() => alert('Бланк скопирован')).catch(() => alert('Не удалось скопировать — выдели текст вручную'));
+    navigator.clipboard.writeText(text).then(function () { alert('Бланк скопирован'); }).catch(function () { alert('Не удалось скопировать — выдели текст вручную'); });
   } else {
     alert('Скопируй текст вручную');
   }
 }
+
 </script>
 </body>
 </html>
