@@ -131,7 +131,7 @@
     letter-spacing: -0.2px;
   }
 
-  body.app-ready { padding-bottom: calc(104px + var(--safe-bottom)); }
+  body.app-ready { padding-bottom: calc(128px + var(--safe-bottom)); }
 
   button { font-family: inherit; }
 
@@ -670,7 +670,7 @@
 
   /* ============ КАТЕГОРИИ ТТК ============ */
   /* Категории растягиваются на всю высоту до нижнего меню */
-  #screen-recipes.active { display: flex; flex-direction: column; min-height: calc(100vh - 104px - var(--safe-bottom)); }
+  #screen-recipes.active { display: flex; flex-direction: column; min-height: calc(100vh - 128px - var(--safe-bottom)); }
   #recipes-list.cats-fill { flex: 1 1 auto; display: flex; flex-direction: column; gap: 10px; }
   #recipes-list.cats-fill .category-card { flex: 1 1 0; margin-bottom: 0; }
 
@@ -1352,7 +1352,10 @@
     bottom: 0; left: 0; right: 0;
     background: var(--bg);
     border-top: 0.5px solid var(--separator);
-    box-shadow: 0 -10px 28px -6px rgba(0,0,0,0.55);
+    box-shadow: 0 -0.5px 0 var(--separator), 0 -4px 14px rgba(0,0,0,0.06);
+    transform: translateZ(0);
+    -webkit-transform: translateZ(0);
+    will-change: transform;
     display: none;
     justify-content: center;
     align-items: center;
@@ -1429,6 +1432,22 @@
   .wo-suggest-item:active { background: var(--surface); }
   .finish-wo-btn { width: 100%; border: none; border-radius: 16px; background: var(--lime); color: #0F0F0F; font-size: 16px; font-weight: 700; padding: 16px; margin: 18px 0 8px; cursor: pointer; font-family: inherit; }
   .finish-wo-btn:active { opacity: .85; }
+  .test-q { background: var(--surface); border-radius: 16px; padding: 14px 16px; margin-bottom: 10px; }
+  .test-q-title { font-size: 15px; font-weight: 700; margin-bottom: 12px; line-height: 1.35; }
+  .test-opt { display: flex; align-items: flex-start; gap: 10px; padding: 10px 12px; border-radius: 12px; cursor: pointer; transition: background .12s; }
+  .test-opt + .test-opt { margin-top: 4px; }
+  .test-radio { width: 20px; height: 20px; border-radius: 50%; border: 2px solid var(--label-3); flex-shrink: 0; margin-top: 1px; position: relative; }
+  .test-opt.selected .test-radio { border-color: var(--ink); }
+  .test-opt.selected .test-radio::after { content: ''; position: absolute; inset: 3px; border-radius: 50%; background: var(--ink); }
+  .test-opt-text { font-size: 14px; flex: 1; line-height: 1.4; }
+  .test-opt.correct { background: rgba(52,199,89,0.16); }
+  .test-opt.wrong { background: rgba(255,59,48,0.16); }
+  .test-opt.correct .test-radio { border-color: #34C759; }
+  .test-opt.correct .test-radio::after { content: ''; position: absolute; inset: 3px; border-radius: 50%; background: #34C759; }
+  .test-opt.wrong .test-radio { border-color: #FF3B30; }
+  .test-result { background: var(--card-accent); color: var(--card-accent-text); border-radius: 18px; padding: 18px; margin-bottom: 14px; text-align: center; }
+  .test-result .score { font-size: 30px; font-weight: 800; }
+  .test-result .verdict { font-size: 14px; margin-top: 4px; opacity: .9; line-height: 1.4; }
 
   .wo-modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 2000; display: none; align-items: flex-end; justify-content: center; }
   .wo-modal-overlay.show { display: flex; }
@@ -1703,7 +1722,7 @@
   <!-- Обучение -->
   <div class="group-header">Обучение</div>
   <div class="inset-group">
-    <div class="profile-row" onclick="alert('Раздел в разработке')">
+    <div class="profile-row" onclick="openTest()">
       <div class="profile-row-icon"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 3L1 9l4 2.18v6L12 21l7-3.82v-6l2-1.09V17h2V9L12 3zm6.82 6L12 12.72 5.18 9 12 5.28 18.82 9zM17 15.99l-5 2.73-5-2.73v-3.72L12 15l5-2.73v3.72z"/></svg></div>
       <div class="profile-row-text">Пройти аттестацию</div>
       <svg class="inset-row-chevron" viewBox="0 0 7 12"><path d="M1 1l5 5-5 5" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
@@ -1726,6 +1745,18 @@
   </button>
   <div class="nav-title"><h1>Обучение</h1></div>
   <div id="learning-list"></div>
+</div>
+
+<!-- ==================== АТТЕСТАЦИЯ (тест) ==================== -->
+<div id="screen-test" class="screen">
+  <button class="nav-bar-back" onclick="switchTab('profile')">
+    <svg width="11" height="20" viewBox="0 0 11 20" style="margin-right: 4px;">
+      <path d="M9 1L1 10l8 9" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+    Профиль
+  </button>
+  <div class="nav-title"><h1>Аттестация</h1></div>
+  <div id="test-body"></div>
 </div>
 
 <!-- ==================== ОБУЧЕНИЕ (статья) ==================== -->
@@ -2008,11 +2039,14 @@ function switchTab(screen) {
       renderLearningList();
     } else if (screen === 'article') {
       document.getElementById('screen-article').classList.add('active');
+    } else if (screen === 'test') {
+      document.getElementById('screen-test').classList.add('active');
+      renderTest();
     }
 
     document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
     // learning и article — подэкраны профиля, держим активным таб «Профиль»
-    const tabScreen = (screen === 'learning' || screen === 'article') ? 'profile' : screen;
+    const tabScreen = (screen === 'learning' || screen === 'article' || screen === 'test') ? 'profile' : screen;
     const activeTab = document.querySelector('.tab[data-screen="' + tabScreen + '"]');
     if (activeTab) activeTab.classList.add('active');
 
@@ -3466,6 +3500,120 @@ function woSelectUser(name) {
   state.woResponsible = name;
   renderWoUsers();
 }
+
+// =====================================================================
+// АТТЕСТАЦИЯ (тест)
+// =====================================================================
+const TEST_QUESTIONS = [
+  { q: 'Что должен сделать бармен перед началом смены?', opts: ['Сразу начать принимать заказы','Проверить чистоту рабочего места, наличие посуды, ингредиентов и инвентаря','Ждать указаний администратора','Проверить только кассу'], correct: 1 },
+  { q: 'Как правильно хранить алкогольную продукцию?', opts: ['В любом удобном месте бара','Только на полу рядом с рабочей зоной','В специально отведённом месте, с соблюдением условий хранения и маркировки','Вместе с бытовой химией'], correct: 2 },
+  { q: 'Что такое фифо / FIFO?', opts: ['Способ приготовления коктейля','Правило: первым пришёл — первым используется','Вид барного инвентаря','Название алкогольного напитка'], correct: 1 },
+  { q: 'Что необходимо сделать, если у продукта истёк срок годности?', opts: ['Использовать быстрее','Переложить в другую тару','Списать и не использовать в работе','Оставить для персонала'], correct: 2 },
+  { q: 'Какой инвентарь используется для точного измерения объёма алкоголя?', opts: ['Шейкер','Джиггер','Стрейнер','Мадлер'], correct: 1 },
+  { q: 'Для чего используется шейкер?', opts: ['Для хранения льда','Для смешивания и охлаждения напитков','Для украшения коктейлей','Для процеживания напитка'], correct: 1 },
+  { q: 'Что такое стрейнер?', opts: ['Барная ложка','Фильтр для процеживания коктейля','Ёмкость для сиропа','Нож для фруктов'], correct: 1 },
+  { q: 'Что должен сделать бармен после приготовления напитка?', opts: ['Сразу перейти к следующему заказу','Проверить внешний вид напитка, подачу и чистоту бокала','Оставить напиток на баре без комментариев','Добавить больше льда без рецепта'], correct: 1 },
+  { q: 'Как должен выглядеть бокал перед подачей гостю?', opts: ['Допускаются следы воды','Допускаются отпечатки пальцев','Чистый, без сколов, разводов и посторонних запахов','Главное, чтобы был холодный'], correct: 2 },
+  { q: 'Что нельзя делать при общении с гостем?', opts: ['Вежливо здороваться','Уточнять заказ','Спорить, грубить или игнорировать гостя','Предлагать альтернативу'], correct: 2 },
+  { q: 'Что должен сделать бармен, если гость жалуется на напиток?', opts: ['Проигнорировать жалобу','Спокойно выслушать, уточнить проблему и сообщить ответственному лицу','Сказать, что напиток приготовлен правильно','Убрать напиток без объяснений'], correct: 1 },
+  { q: 'Что такое стоп-лист?', opts: ['Список сотрудников','Список позиций, которых временно нет в наличии','Список гостей','Список дорогих напитков'], correct: 1 },
+  { q: 'Что должен сделать бармен, если ингредиент закончился?', opts: ['Заменить его любым похожим продуктом','Не говорить никому','Сообщить администратору и внести позицию в стоп-лист','Продолжить принимать заказы на этот напиток'], correct: 2 },
+  { q: 'Как правильно работать со льдом?', opts: ['Брать лёд руками','Использовать совок или щипцы','Хранить лёд рядом с мусором','Использовать лёд повторно'], correct: 1 },
+  { q: 'Что запрещено делать за барной стойкой?', opts: ['Мыть руки','Следить за чистотой','Есть, курить, пользоваться телефоном без необходимости','Проверять наличие ингредиентов'], correct: 2 },
+  { q: 'Что входит в обязанности бармена при закрытии смены?', opts: ['Просто уйти после последнего заказа','Убрать рабочее место, проверить остатки, подготовить бар к следующей смене','Оставить грязную посуду мойщику','Закрыть только кассу'], correct: 1 },
+  { q: 'Что нужно делать при обнаружении недостачи?', opts: ['Скрыть информацию','Списать на следующую смену','Сообщить ответственному лицу и зафиксировать факт','Самостоятельно заменить продукт'], correct: 2 },
+  { q: 'Что такое технологическая карта?', opts: ['Меню для гостей','Документ с рецептурой, граммовкой и способом приготовления позиции','Список поставщиков','График смен'], correct: 1 },
+  { q: 'Можно ли менять рецептуру коктейля без согласования?', opts: ['Да, если бармен считает, что так вкуснее','Да, если ингредиента нет','Нет, рецептура должна соблюдаться согласно технологической карте','Можно всегда'], correct: 2 },
+  { q: 'Что является признаком профессионального бармена?', opts: ['Быстро готовит, но не следит за чистотой','Знает меню, соблюдает стандарты, вежливо общается с гостями и поддерживает порядок','Работает только с постоянными гостями','Делает напитки «на глаз»'], correct: 1 },
+];
+const TEST_LETTERS = ['А','Б','В','Г'];
+
+function openTest() { switchTab('test'); }
+
+function renderTest() {
+  state.testAnswers = {};
+  const el = document.getElementById('test-body');
+  if (!el) return;
+  let html = '<div class="wo-intro">Выбери сотрудника, ответь на все 20 вопросов и нажми «Завершить тест». Результат и список ошибок уйдут менеджеру.</div>';
+  html += '<div class="group-header">Кто проходит</div><div class="chip-row" id="test-user-row"></div>';
+  html += TEST_QUESTIONS.map(function (q, qi) {
+    const opts = q.opts.map(function (o, oi) {
+      return '<div class="test-opt" data-q="' + qi + '" data-o="' + oi + '" onclick="selectTestAnswer(' + qi + ',' + oi + ')">' +
+        '<span class="test-radio"></span>' +
+        '<span class="test-opt-text">' + TEST_LETTERS[oi] + ') ' + escapeHtml(o) + '</span>' +
+      '</div>';
+    }).join('');
+    return '<div class="test-q" id="test-q-' + qi + '"><div class="test-q-title">' + (qi + 1) + '. ' + escapeHtml(q.q) + '</div>' + opts + '</div>';
+  }).join('');
+  html += '<button class="finish-wo-btn" onclick="finishTest()">Завершить тест</button>';
+  el.innerHTML = html;
+  renderTestUsers();
+}
+
+function renderTestUsers() {
+  const row = document.getElementById('test-user-row');
+  if (!row) return;
+  const users = (state.users && state.users.length) ? state.users : [PROFILE_NAME];
+  if (!state.testTaker || users.indexOf(state.testTaker) < 0) state.testTaker = users[0];
+  row.innerHTML = users.map(function (u) {
+    return '<div class="chip' + (u === state.testTaker ? ' selected' : '') + '" data-u="' + escapeHtml(u) + '" onclick="selectTestUser(this.dataset.u)">' + escapeHtml(u) + '</div>';
+  }).join('');
+}
+function selectTestUser(name) { state.testTaker = name; renderTestUsers(); }
+
+function selectTestAnswer(qi, oi) {
+  state.testAnswers[qi] = oi;
+  document.querySelectorAll('.test-opt[data-q="' + qi + '"]').forEach(function (opt) {
+    opt.classList.remove('correct', 'wrong');
+    opt.classList.toggle('selected', parseInt(opt.dataset.o, 10) === oi);
+  });
+}
+
+function finishTest() {
+  const unanswered = [];
+  TEST_QUESTIONS.forEach(function (q, i) { if (state.testAnswers[i] === undefined) unanswered.push(i); });
+  if (unanswered.length) {
+    alert('Ответь на все вопросы. Осталось: ' + unanswered.length);
+    const q0 = document.getElementById('test-q-' + unanswered[0]);
+    if (q0) q0.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    return;
+  }
+  let score = 0; const mistakes = [];
+  TEST_QUESTIONS.forEach(function (q, i) {
+    const chosen = state.testAnswers[i];
+    if (chosen === q.correct) score++;
+    else mistakes.push({ n: i + 1, q: q.q, chosen: TEST_LETTERS[chosen] + ') ' + q.opts[chosen], correct: TEST_LETTERS[q.correct] + ') ' + q.opts[q.correct] });
+    document.querySelectorAll('.test-opt[data-q="' + i + '"]').forEach(function (opt) {
+      const oi = parseInt(opt.dataset.o, 10);
+      opt.classList.remove('selected');
+      if (oi === q.correct) opt.classList.add('correct');
+      if (oi === chosen && chosen !== q.correct) opt.classList.add('wrong');
+    });
+  });
+  const verdict = score >= 18 ? 'Отлично — готов к работе'
+                : score >= 15 ? 'Хорошо — допустить с замечаниями'
+                : score >= 12 ? 'Удовлетворительно — нужно повторное обучение'
+                : 'Аттестация не пройдена';
+  const body = document.getElementById('test-body');
+  let banner = document.getElementById('test-result-banner');
+  if (!banner) { banner = document.createElement('div'); banner.id = 'test-result-banner'; banner.className = 'test-result'; body.insertBefore(banner, body.firstChild); }
+  banner.innerHTML = '<div class="score">' + score + ' / 20</div><div class="verdict">' + escapeHtml(state.testTaker || '') + ' · ' + verdict + '</div>';
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+
+  const payload = { taker: state.testTaker || '', score: score, total: 20, verdict: verdict, mistakes: mistakes, datetime: new Date().toISOString() };
+  api('submitTest', { payload: payload }).then(function (res) {
+    let note;
+    if (res && res.ok && res.sent) note = 'отправлено менеджеру';
+    else if (res && res.ok) note = 'сохранено (отправка менеджеру не настроена)';
+    else note = 'не отправлено — нужен передеплой Apps Script';
+    const v = banner.querySelector('.verdict');
+    if (v) v.innerHTML += ' · <span style="opacity:.75">' + note + '</span>';
+  }).catch(function () {
+    const v = banner.querySelector('.verdict');
+    if (v) v.innerHTML += ' · <span style="opacity:.75">отправка недоступна</span>';
+  });
+}
+
 
 function toggleWoCat(catId) {
   const cat = document.getElementById('wo-cat-' + catId);
