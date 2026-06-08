@@ -210,9 +210,7 @@
   .pin-submit:disabled { opacity: 0.4; cursor: not-allowed; }
 
   .pin-foot {
-    position: fixed;
-    bottom: calc(28px + var(--safe-bottom));
-    left: 0; right: 0;
+    margin-top: 36px;
     text-align: center;
     font-size: 12px;
     color: var(--label-3);
@@ -1353,9 +1351,6 @@
     background: var(--bg);
     border-top: 0.5px solid var(--separator);
     box-shadow: 0 -0.5px 0 var(--separator), 0 -4px 14px rgba(0,0,0,0.06);
-    transform: translateZ(0);
-    -webkit-transform: translateZ(0);
-    will-change: transform;
     display: none;
     justify-content: center;
     align-items: center;
@@ -1860,7 +1855,7 @@ const PROFILE_NAME = 'Арина';
 //   - имя файла в папке photos/ (например 'avatar_arina.jpg')
 //   - полную ссылку https://...
 //   - оставить пустым '' — тогда покажется первая буква имени
-const PROFILE_AVATAR = 'avatar_arina.jpg';
+const PROFILE_AVATAR = 'avatar_arina.jpg'';
 // Задачи на смену (пример; потом будет ставить менеджер)
 const SHIFT_TASKS = [
   'Вакуумировать заготовки',
@@ -3789,3 +3784,4 @@ function copyWriteoffBlank() {
 </script>
 </body>
 </html>
+
