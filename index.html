@@ -1413,12 +1413,12 @@
   .wo-note { flex: 1 1 100%; }
   .wo-add-btn { width: 46px; height: 46px; border: none; border-radius: 12px; background: var(--card-accent); color: var(--card-accent-text); font-size: 26px; line-height: 1; cursor: pointer; flex-shrink: 0; }
   .wo-add-btn:active { opacity: .8; }
-  .wo-field { position: relative; flex: 1 1 100%; display: flex; align-items: stretch; }
+  .wo-field { flex: 1 1 100%; display: flex; align-items: stretch; }
   .wo-field .wo-name { flex: 1; min-width: 0; border-top-right-radius: 0; border-bottom-right-radius: 0; border-right: none; }
   .wo-caret { width: 46px; flex-shrink: 0; border: 1.5px solid var(--separator); border-left: none; border-radius: 0 12px 12px 0; background: var(--bg); color: var(--gray); cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 0; }
   .wo-caret svg { width: 14px; height: 14px; }
   .wo-caret:active { background: var(--surface); }
-  .wo-suggest { position: absolute; top: calc(100% + 4px); left: 0; right: 0; background: var(--bg); border: 1px solid var(--separator); border-radius: 12px; box-shadow: 0 8px 24px rgba(0,0,0,.18); max-height: 220px; overflow-y: auto; z-index: 50; display: none; }
+  .wo-suggest { flex: 1 1 100%; background: var(--bg); border: 1px solid var(--separator); border-radius: 12px; box-shadow: 0 6px 18px rgba(0,0,0,.10); max-height: 220px; overflow-y: auto; display: none; }
   .wo-suggest.show { display: block; }
   .wo-suggest-item { padding: 11px 14px; font-size: 14px; cursor: pointer; border-bottom: 0.5px solid var(--separator); }
   .wo-suggest-item:last-child { border-bottom: none; }
@@ -1817,7 +1817,7 @@ const PROFILE_NAME = 'Арина';
 //   - имя файла в папке photos/ (например 'avatar_arina.jpg')
 //   - полную ссылку https://...
 //   - оставить пустым '' — тогда покажется первая буква имени
-const PROFILE_AVATAR = 'avatar_arina.jpg';
+const PROFILE_AVATAR = '';
 // Задачи на смену (пример; потом будет ставить менеджер)
 const SHIFT_TASKS = [
   'Вакуумировать заготовки',
@@ -3369,6 +3369,7 @@ function switchInvMode(mode) {
 function renderWriteoff() {
   if (!state.writeoff) state.writeoff = {};
   let html = '<div class="wo-intro">Отметь, что списали за смену. Пустые категории уйдут в бланк как «—». В конце нажми «Завершить списание».</div>';
+  html += '<div class="group-header">Кто проводит списание</div><div class="chip-row" id="wo-user-row"></div>';
   WRITEOFF_CATEGORIES.forEach(cat => {
     if (!state.writeoff[cat.id]) state.writeoff[cat.id] = [];
     const unitOpts = WRITEOFF_UNITS.map(u => '<option value="' + u + '">' + u + '</option>').join('');
@@ -3384,11 +3385,11 @@ function renderWriteoff() {
           '<div class="wo-entries" id="wo-entries-' + cat.id + '"></div>' +
           '<div class="wo-add">' +
             '<div class="wo-field">' +
-              '<input class="wo-input wo-name" id="wo-name-' + cat.id + '" placeholder="Название позиции" autocomplete="off" oninput="woFilter(\'' + cat.id + '\')" onfocus="woFilter(\'' + cat.id + '\')">' +
+              '<input class="wo-input wo-name" id="wo-name-' + cat.id + '" placeholder="Название позиции" autocomplete="off" oninput="woFilter(\'' + cat.id + '\')" onfocus="woFilter(\'' + cat.id + '\')" onkeydown="if(event.key===\'Enter\')addWoEntry(\'' + cat.id + '\')">' +
               '<button class="wo-caret" type="button" onclick="woToggleList(\'' + cat.id + '\')" aria-label="Список"><svg viewBox="0 0 12 8"><path d="M1 1l5 5 5-5" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg></button>' +
-              '<div class="wo-suggest" id="wo-suggest-' + cat.id + '"></div>' +
             '</div>' +
-            '<input class="wo-input wo-qty" id="wo-qty-' + cat.id + '" type="number" inputmode="decimal" placeholder="Кол-во">' +
+            '<div class="wo-suggest" id="wo-suggest-' + cat.id + '"></div>' +
+            '<input class="wo-input wo-qty" id="wo-qty-' + cat.id + '" type="number" inputmode="decimal" placeholder="Кол-во" onkeydown="if(event.key===\'Enter\')addWoEntry(\'' + cat.id + '\')">' +
             '<select class="wo-input wo-unit" id="wo-unit-' + cat.id + '">' + unitOpts + '</select>' +
             '<button class="wo-add-btn" onclick="addWoEntry(\'' + cat.id + '\')">+</button>' +
             '<input class="wo-input wo-note" id="wo-note-' + cat.id + '" placeholder="Комментарий (необязательно)" autocomplete="off">' +
@@ -3398,7 +3399,22 @@ function renderWriteoff() {
   });
   html += '<button class="finish-wo-btn" onclick="finishWriteoff()">Завершить списание</button>';
   document.getElementById('writeoff-content').innerHTML = html;
+  renderWoUsers();
   WRITEOFF_CATEGORIES.forEach(cat => { renderWoEntries(cat.id); });
+}
+
+function renderWoUsers() {
+  const row = document.getElementById('wo-user-row');
+  if (!row) return;
+  const users = (state.users && state.users.length) ? state.users : [PROFILE_NAME];
+  if (!state.woResponsible || users.indexOf(state.woResponsible) < 0) state.woResponsible = users[0];
+  row.innerHTML = users.map(u =>
+    '<div class="chip' + (u === state.woResponsible ? ' selected' : '') + '" data-u="' + escapeHtml(u) + '" onclick="woSelectUser(this.dataset.u)">' + escapeHtml(u) + '</div>'
+  ).join('');
+}
+function woSelectUser(name) {
+  state.woResponsible = name;
+  renderWoUsers();
 }
 
 function toggleWoCat(catId) {
@@ -3496,7 +3512,7 @@ function buildWriteoffBlank() {
   const now = new Date();
   const dt = now.toLocaleDateString('ru-RU') + ', ' +
              now.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
-  const lines = ['СПИСАНИЯ', 'Заведение: Бар ЖК HIDE', 'Дата: ' + dt, 'Сотрудник: ' + PROFILE_NAME, ''];
+  const lines = ['СПИСАНИЯ', 'Заведение: Бар ЖК HIDE', 'Дата: ' + dt, 'Сотрудник: ' + (state.woResponsible || PROFILE_NAME), ''];
   let total = 0;
   WRITEOFF_CATEGORIES.forEach(cat => {
     const entries = state.writeoff[cat.id] || [];
@@ -3523,16 +3539,20 @@ function finishWriteoff() {
   if (!confirm('Завершить списание и отправить менеджеру?\n\nВсего позиций: ' + total)) return;
   const blank = buildWriteoffBlank();
   state._lastBlank = blank;
-  const payload = { responsible: PROFILE_NAME, datetime: new Date().toISOString(), items: state.writeoff, blank: blank };
+  const payload = { responsible: (state.woResponsible || PROFILE_NAME), datetime: new Date().toISOString(), items: state.writeoff, blank: blank };
   if (typeof setBusy === 'function') setBusy(true);
   api('finishWriteoff', { payload })
     .then(res => {
       if (typeof setBusy === 'function') setBusy(false);
-      if (res && res.sent) {
-        alert('✅ Бланк сформирован и отправлен менеджеру.');
+      if (res && res.ok && res.sent) {
+        alert('✅ Бланк сохранён в таблицу и отправлен менеджеру.');
         resetWriteoff();
+      } else if (res && res.ok) {
+        alert('✅ Бланк сохранён в таблицу (лист Writeoffs).\nОтправка менеджеру пока не настроена — нужен токен бота. Бланк можно скопировать.');
+        resetWriteoff();
+        showWoModal(blank);
       } else {
-        alert('✅ Бланк сохранён. Отправка менеджеру пока не настроена (нужен токен бота). Бланк можно скопировать.');
+        alert('⚠️ Сервер не принял списание. Скорее всего, не передеплоена новая версия Apps Script. Бланк показан — можно отправить вручную.');
         showWoModal(blank);
       }
     })
