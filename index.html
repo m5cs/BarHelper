@@ -1383,6 +1383,48 @@
     fill: currentColor;
   }
   .tab-label { display: none; }
+
+  /* ==================== СПИСАНИЯ ==================== */
+  .wo-intro { font-size: 13px; color: var(--gray); margin: 4px 0 16px; line-height: 1.45; }
+  .wo-cat { background: var(--surface); border-radius: 16px; margin-bottom: 10px; overflow: hidden; }
+  .wo-cat-head { display: flex; align-items: center; gap: 12px; padding: 15px 16px; cursor: pointer; }
+  .wo-cat-head:active { opacity: .7; }
+  .wo-cat-titles { flex: 1; min-width: 0; }
+  .wo-cat-name { font-size: 16px; font-weight: 700; }
+  .wo-cat-hint { font-size: 12px; color: var(--gray); margin-top: 2px; }
+  .wo-cat-state { font-size: 13px; font-weight: 700; color: var(--gray); white-space: nowrap; }
+  .wo-cat-state.filled { color: var(--ink); }
+  .wo-chev { width: 11px; height: 11px; color: var(--gray); transition: transform .2s; flex-shrink: 0; }
+  .wo-cat.open .wo-chev { transform: rotate(90deg); }
+  .wo-cat-body { padding: 2px 14px 14px; }
+  .wo-entries { display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px; }
+  .wo-entry { display: flex; align-items: center; gap: 10px; background: var(--bg); border-radius: 12px; padding: 10px 12px; }
+  .wo-entry-main { flex: 1; min-width: 0; }
+  .wo-entry-name { font-size: 14px; font-weight: 600; }
+  .wo-entry-note { font-size: 12px; color: var(--gray); margin-top: 1px; }
+  .wo-entry-qty { font-size: 14px; font-weight: 800; color: var(--ink); white-space: nowrap; }
+  .wo-entry-del { width: 26px; height: 26px; border: none; background: transparent; color: var(--gray); font-size: 22px; cursor: pointer; flex-shrink: 0; line-height: 1; padding: 0; }
+  .wo-add { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+  .wo-input { border: 1.5px solid var(--separator); background: var(--bg); border-radius: 12px; padding: 11px 12px; font-size: 15px; font-family: inherit; color: var(--ink); outline: none; }
+  .wo-input:focus { border-color: var(--ink); }
+  .wo-name { flex: 1 1 100%; }
+  .wo-qty { flex: 1 1 0; min-width: 0; }
+  .wo-unit { width: 92px; flex-shrink: 0; }
+  .wo-note { flex: 1 1 100%; }
+  .wo-add-btn { width: 46px; height: 46px; border: none; border-radius: 12px; background: var(--card-accent); color: var(--card-accent-text); font-size: 26px; line-height: 1; cursor: pointer; flex-shrink: 0; }
+  .wo-add-btn:active { opacity: .8; }
+  .finish-wo-btn { width: 100%; border: none; border-radius: 16px; background: var(--lime); color: #0F0F0F; font-size: 16px; font-weight: 700; padding: 16px; margin: 18px 0 8px; cursor: pointer; font-family: inherit; }
+  .finish-wo-btn:active { opacity: .85; }
+
+  .wo-modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 2000; display: none; align-items: flex-end; justify-content: center; }
+  .wo-modal-overlay.show { display: flex; }
+  .wo-modal { background: var(--bg); width: 100%; max-width: 600px; border-radius: 22px 22px 0 0; padding: 20px 18px calc(20px + var(--safe-bottom)); max-height: 85vh; overflow-y: auto; }
+  .wo-modal h3 { font-size: 19px; font-weight: 800; margin-bottom: 12px; }
+  .wo-blank { white-space: pre-wrap; font-size: 13px; line-height: 1.5; background: var(--surface); border-radius: 14px; padding: 14px; font-family: ui-monospace, "SF Mono", monospace; color: var(--ink); }
+  .wo-modal-actions { display: flex; gap: 10px; margin-top: 14px; }
+  .wo-modal-actions button { flex: 1; border: none; border-radius: 14px; padding: 14px; font-size: 15px; font-weight: 700; cursor: pointer; font-family: inherit; }
+  .wo-btn-copy { background: var(--card-accent); color: var(--card-accent-text); }
+  .wo-btn-close { background: var(--surface); color: var(--ink); }
 </style>
 </head>
 <body>
@@ -1401,8 +1443,14 @@
 
 <!-- ==================== ИНВЕНТАРИЗАЦИЯ ==================== -->
 <div id="screen-inv" class="screen">
-  <div class="nav-title"><h1>Инвентаризация</h1></div>
+  <div class="nav-title"><h1 id="inv-screen-title">Инвентаризация</h1></div>
 
+  <div class="segmented" id="inv-mode-toggle" style="margin-bottom:16px;">
+    <div class="segmented-option active" data-mode="inv" onclick="switchInvMode('inv')">Инвентаризация</div>
+    <div class="segmented-option" data-mode="writeoff" onclick="switchInvMode('writeoff')">Списания</div>
+  </div>
+
+  <div id="inventory-mode">
   <div id="saved-banner" class="saved-banner">✓ Замер сохранён</div>
 
   <div id="inv-loading" class="spinner-wrap">
@@ -1482,6 +1530,21 @@
 
     <div class="history" id="history-section" style="display: none;">
       <div id="history-list"></div>
+    </div>
+  </div>
+  </div><!-- /inventory-mode -->
+
+  <div id="writeoff-content" style="display:none;"></div>
+</div>
+
+<!-- Модалка бланка списаний -->
+<div class="wo-modal-overlay" id="wo-modal-overlay">
+  <div class="wo-modal">
+    <h3>Бланк списаний</h3>
+    <div class="wo-blank" id="wo-blank-text"></div>
+    <div class="wo-modal-actions">
+      <button class="wo-btn-copy" onclick="copyWriteoffBlank()">Скопировать</button>
+      <button class="wo-btn-close" onclick="closeWoModal()">Закрыть</button>
     </div>
   </div>
 </div>
@@ -1744,7 +1807,7 @@ const PROFILE_NAME = 'Арина';
 //   - имя файла в папке photos/ (например 'avatar_arina.jpg')
 //   - полную ссылку https://...
 //   - оставить пустым '' — тогда покажется первая буква имени
-const PROFILE_AVATAR = 'avatar_arina.jpg';
+const PROFILE_AVATAR = '';
 // Задачи на смену (пример; потом будет ставить менеджер)
 const SHIFT_TASKS = [
   'Вакуумировать заготовки',
@@ -1887,6 +1950,7 @@ function switchTab(screen) {
 
     if (screen === 'inv') {
       document.getElementById('screen-inv').classList.add('active');
+      switchInvMode(state.invMode || 'inv');
     } else if (screen === 'recipes') {
       document.getElementById('screen-recipes').classList.add('active');
       state.currentCategory = null; // всегда начинаем с категорий
@@ -1911,7 +1975,7 @@ function switchTab(screen) {
     const activeTab = document.querySelector('.tab[data-screen="' + tabScreen + '"]');
     if (activeTab) activeTab.classList.add('active');
 
-    if (screen !== 'inv') {
+    if (screen !== 'inv' || state.invMode === 'writeoff') {
       document.getElementById('save-wrap').classList.remove('show');
     } else {
       updateSaveButton();
@@ -3235,6 +3299,185 @@ function setBusy(busy) {
 }
 function escapeHtml(s) {
   return String(s).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+}
+
+// ==================== СПИСАНИЯ ====================
+const WRITEOFF_UNITS = ['шт', 'г', 'мл', 'л', 'порц'];
+
+const WRITEOFF_CATEGORIES = [
+  { id: 'nastrojka', name: 'Настройка', hint: 'Калибровка / разовое',
+    items: ['Эспрессо', 'Молоко', 'Молоко 3,2%', 'Лёд'] },
+  { id: 'srok', name: 'Срок', hint: 'Срок годности — основной объём',
+    items: ['Чизкейк','Медовик','Круассан классический','Круассан малиновый','Круассан миндальный','Эклер карамельный','Эклер сливочный (ваниль)','Десерт манго (мусс)','Десерт кофейное зерно','Вупи малина','Вупи варёнка','Гранола','Йогурт с гранолой','Сэндвич груша','Сэндвич курица','Сэндвич индейка','Сэндвич окорок','Блины с творогом','Блины с мясом','Рулет из омлета','Омлет (с ветчиной)','Пармезан','Чеддер','Карпаччо','Пастрами','Окорок сыровяленый','Говядина сыровяленая','Камамбер','Дор блю','Оливки','Маслины','Апельсин','Лимон','Лайм','Грейпфрут','Яблоки','Морковь','Мята','Базилик','Имбирь','Шпинат','Личи','Черника','Брезаола','Фреш апельсин','Фреш лайм','Фреш лимон','Юдзу','Каламанси','Мёд алоэ','Пена алоэ','Жасмин колд брю','Облепиха п/ф','Маракуйя п/ф','Миндальное молоко','Сливки 33%','Взбитые сливки','Белок «удобное яйцо»','Францисканер','Гиннес','Вода Байкал','Вода Бон Аква газ'] },
+  { id: 'fasovka', name: 'Фасовка', hint: 'Обрезь при нарезке',
+    items: ['Пармезан','Чеддер','Карпаччо','Пастрами','Брезаола','Парма'] },
+  { id: 'porcha', name: 'Порча', hint: 'Испортилось при хранении/приёмке',
+    items: ['Апельсин','Яблоки','Лимон','Лайм','Грейпфрут','Бананы','Базилик','Мята','Парма','Камамбер','Сливки 33%','Рулет из омлета','Чизкейк','Десерт манго (треснутый)','Сэндвич окорок','п/ф лимон','п/ф лайм','Вода Байкал б/г'] },
+  { id: 'boy', name: 'Бой', hint: 'Разбитая посуда',
+    items: ['Рокс (Rona)','Флюте','Снифтер','Рюмка','Хайболл','Бокал под красное','Шале','Крышка чайника'] },
+  { id: 'brak', name: 'Брак', hint: 'Дефект при приёмке от поставщика',
+    items: ['Апельсины'] },
+  { id: 'oshibka', name: 'Ошибка приготовления', hint: '',
+    items: ['Кокосовое молоко'] },
+  { id: 'prorabotka', name: 'Списание / Проработка', hint: 'Рецептуры + стажёры',
+    items: ['Калпис виноград','Юдзу п/ф','Жасмин п/ф','Имбирь п/ф','Пена алоэ','Облепиха п/ф','Апельсин п/ф','Лайм','Лимон п/ф','Палочки корицы','Мёд'] },
+];
+
+function switchInvMode(mode) {
+  state.invMode = mode;
+  document.querySelectorAll('#inv-mode-toggle .segmented-option').forEach(o =>
+    o.classList.toggle('active', o.dataset.mode === mode));
+  const invWrap = document.getElementById('inventory-mode');
+  const woWrap = document.getElementById('writeoff-content');
+  const saveWrap = document.getElementById('save-wrap');
+  const title = document.getElementById('inv-screen-title');
+  if (mode === 'writeoff') {
+    if (invWrap) invWrap.style.display = 'none';
+    if (woWrap) woWrap.style.display = 'block';
+    if (title) title.textContent = 'Списания';
+    if (saveWrap) saveWrap.classList.remove('show');
+    if (!state.woRendered) { renderWriteoff(); state.woRendered = true; }
+  } else {
+    if (woWrap) woWrap.style.display = 'none';
+    if (invWrap) invWrap.style.display = 'block';
+    if (title) title.textContent = 'Инвентаризация';
+    if (typeof updateSaveButton === 'function') updateSaveButton();
+  }
+  window.scrollTo({ top: 0 });
+}
+
+function renderWriteoff() {
+  if (!state.writeoff) state.writeoff = {};
+  let html = '<div class="wo-intro">Отметь, что списали за смену. Пустые категории уйдут в бланк как «—». В конце нажми «Завершить списание».</div>';
+  WRITEOFF_CATEGORIES.forEach(cat => {
+    if (!state.writeoff[cat.id]) state.writeoff[cat.id] = [];
+    const opts = cat.items.map(i => '<option value="' + escapeHtml(i) + '">').join('');
+    const unitOpts = WRITEOFF_UNITS.map(u => '<option value="' + u + '">' + u + '</option>').join('');
+    const hint = cat.hint ? '<div class="wo-cat-hint">' + escapeHtml(cat.hint) + '</div>' : '';
+    html +=
+      '<div class="wo-cat" id="wo-cat-' + cat.id + '">' +
+        '<div class="wo-cat-head" onclick="toggleWoCat(\'' + cat.id + '\')">' +
+          '<div class="wo-cat-titles"><div class="wo-cat-name">' + escapeHtml(cat.name) + '</div>' + hint + '</div>' +
+          '<div class="wo-cat-state" id="wo-state-' + cat.id + '">—</div>' +
+          '<svg class="wo-chev" viewBox="0 0 7 12"><path d="M1 1l5 5-5 5" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>' +
+        '</div>' +
+        '<div class="wo-cat-body" id="wo-body-' + cat.id + '" style="display:none;">' +
+          '<div class="wo-entries" id="wo-entries-' + cat.id + '"></div>' +
+          '<div class="wo-add">' +
+            '<input class="wo-input wo-name" id="wo-name-' + cat.id + '" list="wo-list-' + cat.id + '" placeholder="Название позиции" autocomplete="off">' +
+            '<input class="wo-input wo-qty" id="wo-qty-' + cat.id + '" type="number" inputmode="decimal" placeholder="Кол-во">' +
+            '<select class="wo-input wo-unit" id="wo-unit-' + cat.id + '">' + unitOpts + '</select>' +
+            '<button class="wo-add-btn" onclick="addWoEntry(\'' + cat.id + '\')">+</button>' +
+            '<input class="wo-input wo-note" id="wo-note-' + cat.id + '" placeholder="Комментарий (необязательно)" autocomplete="off">' +
+          '</div>' +
+          '<datalist id="wo-list-' + cat.id + '">' + opts + '</datalist>' +
+        '</div>' +
+      '</div>';
+  });
+  html += '<button class="finish-wo-btn" onclick="finishWriteoff()">Завершить списание</button>';
+  document.getElementById('writeoff-content').innerHTML = html;
+  WRITEOFF_CATEGORIES.forEach(cat => { renderWoEntries(cat.id); });
+}
+
+function toggleWoCat(catId) {
+  const cat = document.getElementById('wo-cat-' + catId);
+  const body = document.getElementById('wo-body-' + catId);
+  const open = cat.classList.toggle('open');
+  body.style.display = open ? 'block' : 'none';
+}
+
+function addWoEntry(catId) {
+  const nameEl = document.getElementById('wo-name-' + catId);
+  const qtyEl = document.getElementById('wo-qty-' + catId);
+  const unitEl = document.getElementById('wo-unit-' + catId);
+  const noteEl = document.getElementById('wo-note-' + catId);
+  const name = (nameEl.value || '').trim();
+  if (!name) { nameEl.focus(); return; }
+  const qty = (qtyEl.value || '').trim() || '1';
+  const unit = unitEl.value || 'шт';
+  const note = (noteEl.value || '').trim();
+  if (!state.writeoff[catId]) state.writeoff[catId] = [];
+  state.writeoff[catId].push({ name: name, qty: qty, unit: unit, note: note });
+  nameEl.value = ''; qtyEl.value = ''; noteEl.value = ''; unitEl.value = 'шт';
+  nameEl.focus();
+  renderWoEntries(catId);
+}
+
+function removeWoEntry(catId, idx) {
+  if (state.writeoff[catId]) {
+    state.writeoff[catId].splice(idx, 1);
+    renderWoEntries(catId);
+  }
+}
+
+function renderWoEntries(catId) {
+  const wrap = document.getElementById('wo-entries-' + catId);
+  if (!wrap) return;
+  const entries = state.writeoff[catId] || [];
+  wrap.innerHTML = entries.map((e, i) =>
+    '<div class="wo-entry">' +
+      '<div class="wo-entry-main">' +
+        '<div class="wo-entry-name">' + escapeHtml(e.name) + '</div>' +
+        (e.note ? '<div class="wo-entry-note">' + escapeHtml(e.note) + '</div>' : '') +
+      '</div>' +
+      '<div class="wo-entry-qty">' + escapeHtml(e.qty) + ' ' + escapeHtml(e.unit) + '</div>' +
+      '<button class="wo-entry-del" onclick="removeWoEntry(\'' + catId + '\',' + i + ')">&times;</button>' +
+    '</div>'
+  ).join('');
+  const state_el = document.getElementById('wo-state-' + catId);
+  if (state_el) {
+    if (entries.length) { state_el.textContent = entries.length + ' поз.'; state_el.classList.add('filled'); }
+    else { state_el.textContent = '—'; state_el.classList.remove('filled'); }
+  }
+}
+
+function buildWriteoffBlank() {
+  const now = new Date();
+  const dt = now.toLocaleDateString('ru-RU') + ', ' +
+             now.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+  const lines = ['СПИСАНИЯ', 'Заведение: Бар ЖК HIDE', 'Дата: ' + dt, 'Сотрудник: ' + PROFILE_NAME, ''];
+  let total = 0;
+  WRITEOFF_CATEGORIES.forEach(cat => {
+    const entries = state.writeoff[cat.id] || [];
+    if (!entries.length) {
+      lines.push(cat.name + ': —');
+    } else {
+      lines.push(cat.name + ':');
+      entries.forEach(e => {
+        total++;
+        let l = '  • ' + e.name + ' — ' + e.qty + ' ' + e.unit;
+        if (e.note) l += ' (' + e.note + ')';
+        lines.push(l);
+      });
+    }
+  });
+  lines.push('');
+  lines.push('Всего позиций: ' + total);
+  return lines.join('\n');
+}
+
+function finishWriteoff() {
+  const total = WRITEOFF_CATEGORIES.reduce((s, c) => s + ((state.writeoff[c.id] || []).length), 0);
+  if (total === 0) { alert('Добавь хотя бы одну позицию в списания.'); return; }
+  const blank = buildWriteoffBlank();
+  state._lastBlank = blank;
+  showWoModal(blank);
+}
+
+function showWoModal(text) {
+  document.getElementById('wo-blank-text').textContent = text;
+  document.getElementById('wo-modal-overlay').classList.add('show');
+}
+function closeWoModal() {
+  document.getElementById('wo-modal-overlay').classList.remove('show');
+}
+function copyWriteoffBlank() {
+  const text = state._lastBlank || '';
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(() => alert('Бланк скопирован')).catch(() => alert('Не удалось скопировать — выдели текст вручную'));
+  } else {
+    alert('Скопируй текст вручную');
+  }
 }
 </script>
 </body>
