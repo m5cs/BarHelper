@@ -6,11 +6,11 @@
 <title>Bar Helper</title>
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="icon" type="image/png" href="apple-touch-icon.png">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="Bar Helper">
 <meta name="theme-color" content="#0F0F0F">
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<script>
+(function(){try{var tg=window.Telegram&&window.Telegram.WebApp;if(tg&&tg.platform&&tg.platform!=="unknown"){var r=document.documentElement;var apply=function(){r.classList.remove("theme-dark","theme-light");r.classList.add(tg.colorScheme==="dark"?"theme-dark":"theme-light");};try{tg.ready();}catch(e){}try{tg.expand();}catch(e){}apply();if(tg.onEvent)tg.onEvent("themeChanged",apply);}}catch(e){}})();
+</script>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
   /* ============ Pilo Design Tokens (light, утверждено) ============ */
@@ -1865,7 +1865,7 @@ const PROFILE_NAME = 'Арина';
 //   - имя файла в папке photos/ (например 'avatar_arina.jpg')
 //   - полную ссылку https://...
 //   - оставить пустым '' — тогда покажется первая буква имени
-const PROFILE_AVATAR = 'avatar_arina.jpg';
+const PROFILE_AVATAR = '';
 // Задачи на смену (пример; потом будет ставить менеджер)
 const SHIFT_TASKS = [
   'Вакуумировать заготовки',
